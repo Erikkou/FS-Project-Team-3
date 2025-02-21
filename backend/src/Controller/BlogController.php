@@ -59,7 +59,7 @@ class BlogController extends AbstractController
      * @throws \JsonException
      */
     #[Route('/add/blog', name: 'blog_create', methods: ['POST'])]
-    #[IsGranted('ROLE_ADMIN')]
+//    #[IsGranted('ROLE_ADMIN')]
     public function create(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
@@ -67,7 +67,7 @@ class BlogController extends AbstractController
         $blog = new Blog();
         $blog->setTitle($data['title'])
             ->setDescription($data['description'])
-            ->setImg($data['img'])
+//            ->setImg($data['img'])
             ->setAuthor($data['author'])
             ->setDate(new \DateTime('now'));
 
