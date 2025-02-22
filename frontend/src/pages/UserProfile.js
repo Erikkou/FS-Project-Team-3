@@ -1,87 +1,88 @@
-import React, { useState, useEffect } from "react";
+import React, {useEffect, useState} from "react";
+import {useNavigate} from "react-router-dom";
+import Api from "../Api";
 
 const UserProfile = () => {
-  // **State to store user profile data**
-  const [userData, setUserData] = useState({
-    name: "erik",
-    email: "erik@example.com",
-    avatar: "https://robohash.org/johndoe",
+    // **State to store user profile data**
+    const [user, setUser] = useState(null);
+    const [email, setEmail] = useState('');
+    const navigate = useNavigate();
 
-
-  });
-
-  // Effect to fetch user profile from API/DB
-  useEffect(() => {
-   
-    // Example API call: fetchUserProfile()
-    // --------------------------------Replace the static data below with API response------------------------------
-    const fetchUserData = async () => {
-      try {
-        // Simulated fetch
-        const response = {
-          name: "erik",
-          email: "erik@example.com",
-          avatar: "https://robohash.org/johndoe",    // User avatar image URL
-
-
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const response = await Api.get('/api/me');
+                setUser(response.data);
+                setEmail(response.data.email);
+            } catch (error) {
+                localStorage.removeItem('token');
+                navigate('/login');
+            }
         };
-        setUserData(response); // Set the fetched user data
-      } catch (error) {
-        console.error("Failed to fetch user profile:", error);
-      }
+        fetchUser().then(r => r);
+    }, [navigate]);
+
+    const handleEmailChange = (e) => {
+        setEmail(e.target.value);
     };
 
-    fetchUserData();
-  }, []);
+    const handleEmailUpdate = async (e) => {
+        e.preventDefault();
+        try {
+            await Api.put('/api/users/email', {email});
+            alert('Email updated successfully');
+        } catch (error) {
+            alert('Failed to update email');
+        }
+    };
 
-  return (
-    <div className="min-h-screen bg-gray-800 text-white p-6 left-0 right-0 w-full opacity-90">
-      {/* Page Title */}
-      <h1 className="text-3xl font-bold mb-6">User Profile</h1>
+    if (!user) {
+        return <div>Loading...</div>;
+    }
 
-      {/* User Profile Card */}
-      <div className="p-6 bg-gray-700 rounded shadow-lg max-w-3xl mx-auto">
-        {/* Profile Header */}
-        <div className="flex items-center mb-6">
-          {/* User Avatar */}
-          <img
-            src={userData.avatar}
-            alt="User Avatar"
-            className="w-20 h-20 rounded-full border-2 border-yellow-500"
-          />
-          <div className="ml-6">
-            {/* User Name */}
-            <h2 className="text-2xl font-bold !text-white">{userData.name}</h2>
-            {/* User Email */}
-            <p className="text-gray-300">{userData.email}</p>
-          </div>
+    return (
+        <div className="min-h-screen bg-gray-800 text-white p-6 left-0 right-0 w-full opacity-90">
+            {/* Page Title */}
+            <h1 className="text-3xl font-bold mb-6">User Profile</h1>
+
+            {/* User Profile Card */}
+            <div className="p-6 bg-gray-700 rounded shadow-lg max-w-3xl mx-auto">
+                {/* Profile Header */}
+                <div className="flex items-center mb-6">
+                    {/* User Avatar */}
+                    {/*<img*/}
+                    {/*  src={userData.avatar}*/}
+                    {/*  alt="User Avatar"*/}
+                    {/*  className="w-20 h-20 rounded-full border-2 border-yellow-500"*/}
+                    {/*/>*/}
+                    <div className="ml-6">
+                        {/* User Name */}
+                        <h3 className="text-2xl font-bold !text-white">Username: {user.username}</h3>
+                        {/* User Email */}
+                        <h3 className="text-gray-300">Email: {user.email}</h3>
+                    </div>
+                </div>
+
+                {/* Email Update Form */}
+                <form onSubmit={handleEmailUpdate}>
+                    <div className="mb-4">
+                        <label className="block text-gray-300 mb-2" htmlFor="email">Update Email</label>
+                        <input
+                            type="email"
+                            id="email"
+                            value={email}
+                            onChange={handleEmailChange}
+                            className="w-full p-2 rounded bg-gray-600 text-white"
+                        />
+                    </div>
+                    <button type="submit"
+                            className="px-6 py-2 bg-yellow-500 text-black font-bold rounded hover:bg-yellow-400">
+                        Update Email
+                    </button>
+                </form>
+            </div>
         </div>
-
-        {/* Profile Statistics */}
-        <div className="grid grid-cols-2 gap-6">
-          {/* Total Points */}
-          <div className="p-4 bg-gray-600 rounded text-center">
-
-          </div>
-
-          {/* Leagues Joined */}
-          <div className="p-4 bg-gray-600 rounded text-center">
-
-          </div>
-        </div>
-
-        {/* Return to the dashboard Button */}
-        <div className="mt-6 text-center">
-          <a href="/">
-            <button className="px-6 py-2 bg-yellow-500 text-black font-bold rounded hover:bg-yellow-400">
-                Home
-            </button>
-          </a>
-          
-        </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default UserProfile;

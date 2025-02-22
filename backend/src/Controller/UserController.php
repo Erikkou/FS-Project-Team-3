@@ -75,5 +75,22 @@ class UserController extends AbstractController
         ]);
     }
 
+    #[Route('/api/users/email', name: 'update_email', methods: ['PUT'])]
+    public function updateEmail(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $user = $this->getUser();
+
+        if (!$user instanceof User) {
+            return new JsonResponse(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $user->setEmail($data['email']);
+        $em->persist($user);
+        $em->flush();
+
+        return new JsonResponse(['status' => 'Email updated'], Response::HTTP_OK);
+    }
+
 
 }
