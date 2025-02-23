@@ -74,7 +74,6 @@
       <path value="$PROJECT_DIR$/backend/vendor/symfony/security-core" />
       <path value="$PROJECT_DIR$/backend/vendor/symfony/polyfill-php83" />
       <path value="$PROJECT_DIR$/backend/vendor/symfony/process" />
-      <path value="$PROJECT_DIR$/backend/vendor/symfony/property-access" />
       <path value="$PROJECT_DIR$/backend/vendor/symfony/property-info" />
       <path value="$PROJECT_DIR$/backend/vendor/symfony/var-exporter" />
       <path value="$PROJECT_DIR$/backend/vendor/symfony/yaml" />
@@ -113,6 +112,9 @@
       <path value="$PROJECT_DIR$/backend/vendor/symfony/http-client" />
       <path value="$PROJECT_DIR$/backend/vendor/doctrine/persistence" />
       <path value="$PROJECT_DIR$/backend/vendor/composer" />
+      <path value="$PROJECT_DIR$/backend/vendor/symfony/property-access" />
+      <path value="$PROJECT_DIR$/backend/vendor/symfony/polyfill-intl-idn" />
+      <path value="$PROJECT_DIR$/backend/vendor/symfony/mime" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.2" />

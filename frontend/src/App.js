@@ -9,7 +9,6 @@ import BackgroundSection from "./components/BackgroundSection";
 import MainContent from "./components/MainContent";
 import LoginPage from "./components/LoginPage";
 import SignupPage from "./components/SignUpPage";
-import Profile from "./components/Profile";
 import UserSettings from "./components/UserSettings";
 
 // Pages
@@ -35,7 +34,6 @@ import GameDetails from "./pages/GameDetails";
 // Auth Context
 import {AuthProvider} from "./AuthContext";
 import LeaderboardDetailsPopup from "./pages/LeaderboardDetailsPopup";
-import TeamDetailsPopup from "./pages/TeamDetailsPopup";
 
 const App = () => {
     return (
@@ -49,7 +47,6 @@ const App = () => {
                             <Route path="/" element={<MainContent/>}/>
                             <Route path="/login" element={<LoginPage/>}/>
                             <Route path="/signup" element={<SignupPage/>}/>
-                            <Route path="/profile" element={<Profile/>}/>
                             <Route path="/blogs" element={<BlogPage/>}/>
                             <Route path="/blog/show/:id" element={<BlogDetails/>}/>
                             <Route path="/games-overview" element={<GamesOverview/>}/>
