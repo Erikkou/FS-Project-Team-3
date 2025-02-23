@@ -17,6 +17,11 @@ RUN apt-get update && apt-get install -y \
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Pas PHP-instellingen aan voor grotere uploads
+RUN echo "upload_max_filesize=15M" > /usr/local/etc/php/conf.d/uploads.ini
+RUN echo "post_max_size=15M" >> /usr/local/etc/php/conf.d/uploads.ini
+RUN echo "memory_limit=128M" >> /usr/local/etc/php/conf.d/uploads.ini
+
 # Stel de werkmap in
 WORKDIR /var/www
 
