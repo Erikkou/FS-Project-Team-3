@@ -27,7 +27,7 @@ class ApiClient
      */
     public function request(string $endpoint, array $query = []): array
     {
-        $query['api_token'] = '';
+        $query['api_token'] = 'D36wq51bFEOQr96obdIxmcnSrfYdw8pp5MirJy9QUYXdlqhVj17UTfhstmQD';
 
         $response = $this->client->request('GET', 'https://api.sportmonks.com/v3/football/' . $endpoint, [
             'query' => $query,

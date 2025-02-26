@@ -27,9 +27,6 @@ final class Version20250127000457 extends AbstractMigration
             'CREATE TABLE calendar (id INT AUTO_INCREMENT NOT NULL, home_team_id INT NOT NULL, away_team_id INT DEFAULT NULL, stadium_id_id INT DEFAULT NULL, round_id_id INT DEFAULT NULL, starting_at DATE NOT NULL, INDEX IDX_6EA9A1469C4C13F6 (home_team_id), INDEX IDX_6EA9A14645185D02 (away_team_id), INDEX IDX_6EA9A146DCFF57F7 (stadium_id_id), INDEX IDX_6EA9A146A9378AAE (round_id_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB'
         );
         $this->addSql(
-            'CREATE TABLE matches (id INT NOT NULL, name VARCHAR(255) NOT NULL, starting_at VARCHAR(255) NOT NULL, end_result_info VARCHAR(255) NOT NULL, stage_id INT NOT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB'
-        );
-        $this->addSql(
             'CREATE TABLE player (id INT NOT NULL, team_id INT NOT NULL, name VARCHAR(255) NOT NULL, display_name VARCHAR(255) NOT NULL, jersey_number INT DEFAULT NULL, position_id INT DEFAULT NULL, detailed_position_id INT DEFAULT NULL, price VARCHAR(255) NOT NULL, INDEX IDX_98197A65296CD8AE (team_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB'
         );
         $this->addSql(
@@ -78,7 +75,6 @@ final class Version20250127000457 extends AbstractMigration
         $this->addSql('ALTER TABLE player DROP FOREIGN KEY FK_98197A65296CD8AE');
         $this->addSql('DROP TABLE blog');
         $this->addSql('DROP TABLE calendar');
-        $this->addSql('DROP TABLE matches');
         $this->addSql('DROP TABLE player');
         $this->addSql('DROP TABLE rounds');
         $this->addSql('DROP TABLE scores');

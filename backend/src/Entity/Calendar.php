@@ -14,18 +14,17 @@ class Calendar
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'home_team')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?Team $home_team = null;
+    #[ORM\Column(type: Types::INTEGER)]
+    private ?int $home_team = null;
 
-    #[ORM\ManyToOne(inversedBy: 'away_team')]
-    private ?Team $away_team = null;
+    #[ORM\Column(type: Types::INTEGER)]
+    private ?int $away_team = null;
 
-    #[ORM\ManyToOne]
-    private ?Stadium $stadium_id = null;
+    #[ORM\Column(type: Types::INTEGER)]
+    private ?int $stadium_id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'round')]
-    private ?Rounds $round_id = null;
+    #[ORM\Column(type: Types::INTEGER)]
+    private ?int $round_id = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTimeInterface $starting_at = null;
@@ -42,48 +41,48 @@ class Calendar
         return $this;
     }
 
-    public function getHomeTeam(): ?Team
+    public function getHomeTeam(): ?int
     {
         return $this->home_team;
     }
 
-    public function setHomeTeam(?Team $home_team): static
+    public function setHomeTeam(?int $home_team): static
     {
         $this->home_team = $home_team;
 
         return $this;
     }
 
-    public function getAwayTeam(): ?Team
+    public function getAwayTeam(): ?int
     {
         return $this->away_team;
     }
 
-    public function setAwayTeam(?Team $away_team): static
+    public function setAwayTeam(?int $away_team): static
     {
         $this->away_team = $away_team;
 
         return $this;
     }
 
-    public function getStadiumId(): ?Stadium
+    public function getStadiumId(): ?int
     {
         return $this->stadium_id;
     }
 
-    public function setStadiumId(?Stadium $stadium_id): static
+    public function setStadiumId(?int $stadium_id): static
     {
         $this->stadium_id = $stadium_id;
 
         return $this;
     }
 
-    public function getRoundId(): ?Rounds
+    public function getRoundId(): ?int
     {
         return $this->round_id;
     }
 
-    public function setRoundId(?Rounds $round_id): static
+    public function setRoundId(?int $round_id): static
     {
         $this->round_id = $round_id;
 

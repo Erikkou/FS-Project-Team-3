@@ -71,32 +71,6 @@ INSERT INTO `doctrine_migration_versions` VALUES
 UNLOCK TABLES;
 
 --
--- Table structure for table `matches`
---
-
-DROP TABLE IF EXISTS `matches`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `matches` (
-  `id` int(11) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `starting_at` varchar(255) NOT NULL,
-  `end_result_info` varchar(255) NOT NULL,
-  `stage_id` int(11) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `matches`
---
-
-LOCK TABLES `matches` WRITE;
-/*!40000 ALTER TABLE `matches` DISABLE KEYS */;
-/*!40000 ALTER TABLE `matches` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `player`
 --
 

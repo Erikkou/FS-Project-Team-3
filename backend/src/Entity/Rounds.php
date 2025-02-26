@@ -24,16 +24,6 @@ class Rounds
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTimeInterface $end_at = null;
 
-    /**
-     * @var Collection<int, Calendar>
-     */
-    #[ORM\OneToMany(mappedBy: 'round_id', targetEntity: Calendar::class)]
-    private Collection $round;
-
-    public function __construct()
-    {
-        $this->round = new ArrayCollection();
-    }
 
     public function getId(): ?int
     {
@@ -83,33 +73,4 @@ class Rounds
         return $this;
     }
 
-    /**
-     * @return Collection<int, Calendar>
-     */
-    public function getRound(): Collection
-    {
-        return $this->round;
-    }
-
-    public function addRound(Calendar $round): static
-    {
-        if (!$this->round->contains($round)) {
-            $this->round->add($round);
-            $round->setRoundId($this);
-        }
-
-        return $this;
-    }
-
-    public function removeRound(Calendar $round): static
-    {
-        if ($this->round->removeElement($round)) {
-            // set the owning side to null (unless already changed)
-            if ($round->getRoundId() === $this) {
-                $round->setRoundId(null);
-            }
-        }
-
-        return $this;
-    }
 }
