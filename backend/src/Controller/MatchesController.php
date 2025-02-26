@@ -17,7 +17,8 @@ use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 class MatchesController extends AbstractController
 {
     public function __construct(
-        private readonly ApiClient $apiClient
+        private readonly ApiClient $apiClient,
+        private readonly EntityManagerInterface $em
     ) {
     }
 
@@ -29,8 +30,8 @@ class MatchesController extends AbstractController
      * @throws TransportExceptionInterface
      * @throws \DateMalformedStringException
      */
-    #[Route('/set-matches/{date}', name: 'set_matches')]
-    public function setMatches(string $date, EntityManagerInterface $em): JsonResponse
+    #[Route('/set-matches', name: 'set_matches')]
+    public function setMatches(): JsonResponse
     {
         $response = $this->apiClient->request('fixtures/date/' . $date, ['include' => 'scores']);
         $newMatches = [];

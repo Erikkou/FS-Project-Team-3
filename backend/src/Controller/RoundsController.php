@@ -5,6 +5,8 @@ namespace App\Controller;
 use App\Entity\Rounds;
 use App\Utils\ApiClient;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
@@ -32,8 +34,7 @@ class RoundsController extends AbstractController
      * @throws ClientExceptionInterface
      * @throws \DateMalformedStringException
      */
-    #[
-        Route('/api/set/rounds', name: 'set_rounds')]
+    #[Route('/api/set/rounds', name: 'set_rounds')]
     public function setRounds(): JsonResponse
     {
         $response = $this->client->request('rounds', ['filters' => 'roundSeasons:23628']);
@@ -58,49 +59,89 @@ class RoundsController extends AbstractController
         return new JsonResponse(['status' => 'success', 'message' => 'Rounds have been saved']);
     }
 
-    #[Route('/api/show/rounds', name: 'show_rounds', methods: ['GET'])]
-    public function showRounds(): JsonResponse
-    {
-        $rounds = $this->entityManager->getRepository(Rounds::class)->findAll();
-        $data = [];
-        foreach ($rounds as $round) {
-            $data[] = [
-                'id' => $round->getId(),
-                'name' => $round->getName(),
-                'starting_at' => $round->getStartAt()->format('d-m-Y'),
-                'ending_at' => $round->getEndAt()->format('d-m-Y'),
-            ];
-        }
-        return new JsonResponse($data);
-    }
-
     #[Route('/api/show/rounds/week', name: 'show_rounds_week', methods: ['GET'])]
     public function showRoundsPerWeek(): JsonResponse
     {
-        $rounds = $this->entityManager->getRepository(Rounds::class)->findAll();
-        $data = [];
-
-        // Get the current week's start (Monday) and end (Sunday)
         $weekStart = new \DateTime('monday this week');
         $weekEnd = new \DateTime('sunday this week');
-        $weekEnd->setTime(23, 59, 59); // Include the entire day
+        $weekEnd->setTime(23, 59, 59);
 
-        foreach ($rounds as $round) {
-            $startingAt = $round->getStartAt();
-            $endingAt = $round->getEndAt();
+        // Fetch rounds from the database that fall within this week
+        $rounds = $this->entityManager->getRepository(Rounds::class)->createQueryBuilder('r')
+            ->where('r.start_at BETWEEN :weekStart AND :weekEnd')
+            ->setParameter('weekStart', $weekStart)
+            ->setParameter('weekEnd', $weekEnd)
+            ->getQuery()
+            ->getResult();
 
-            // Check if the round starts or ends within the current week
-            if (
-                ($startingAt >= $weekStart && $startingAt <= $weekEnd)
-            ) {
-                $data[] = [
-                    'id' => $round->getId(),
-                    'name' => $round->getName(),
-                    'starting_at' => $startingAt->format('d-m-Y'),
-                    'ending_at' => $endingAt->format('d-m-Y'),
-                ];
-            }
+        if (!$rounds) {
+            return new JsonResponse(['error' => 'No rounds found for this week'], 404);
         }
+
+        // Format response
+        $data = [];
+        foreach ($rounds as $round) {
+            $data = [
+                'id' => $round->getId(),
+                'name' => $round->getName(),
+                'starting_at' => $round->getStartAt()->format('Y-m-d'),
+                'ending_at' => $round->getEndAt()->format('Y-m-d'),
+            ];
+        }
+
+        return new JsonResponse($data);
+    }
+
+
+    /**
+     * @throws NonUniqueResultException
+     * @throws NoResultException
+     */
+    #[Route('/api/show/rounds/{currentRound}', name: 'show_previous_next_round', methods: ['GET'])]
+    public function showPreviousNextRound(int $currentRound): JsonResponse
+    {
+        // Get the highest round number (last round)
+        $maxRound = $this->entityManager->getRepository(Rounds::class)
+            ->createQueryBuilder('r')
+            ->select('MAX(r.id)') // Assuming id is sequential, otherwise change to name parsing
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        // Get previous and next rounds
+        $previousRound = ($currentRound > 1) ?
+            $this->entityManager->getRepository(Rounds::class)->findOneBy(['id' => $currentRound - 1])
+            : null;
+
+        $nextRound = ($currentRound < $maxRound) ?
+            $this->entityManager->getRepository(Rounds::class)->findOneBy(['id' => $currentRound + 1])
+            : null;
+
+        // Get current round
+        $currentRoundData = $this->entityManager->getRepository(Rounds::class)->findOneBy(
+            ['id' => $currentRound]
+        );
+
+        // Build response
+        $data = [
+            'current_round' => $currentRoundData ? [
+                'id' => $currentRoundData->getId(),
+                'name' => $currentRoundData->getName(),
+                'starting_at' => $currentRoundData->getStartAt()->format('Y-m-d'),
+                'ending_at' => $currentRoundData->getEndAt()->format('Y-m-d'),
+            ] : null,
+            'previous_round' => $previousRound ? [
+                'id' => $previousRound->getId(),
+                'name' => $previousRound->getName(),
+                'starting_at' => $previousRound->getStartAt()->format('Y-m-d'),
+                'ending_at' => $previousRound->getEndAt()->format('Y-m-d'),
+            ] : null,
+            'next_round' => $nextRound ? [
+                'id' => $nextRound->getId(),
+                'name' => $nextRound->getName(),
+                'starting_at' => $nextRound->getStartAt()->format('Y-m-d'),
+                'ending_at' => $nextRound->getEndAt()->format('Y-m-d'),
+            ] : null,
+        ];
 
         return new JsonResponse($data);
     }
