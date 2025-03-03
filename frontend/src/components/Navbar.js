@@ -41,6 +41,12 @@ import React, { useContext, useState } from "react";
             >
               Spelkalender
             </Link>
+            <Link
+              to="/predict-result"
+              className="hover:text-blue-400 transition duration-200"
+            >
+              Predict
+            </Link>
 
             {/* Links based on user roles */}
             {authState.isLoggedIn && authState.role === "beheer" && (
@@ -120,6 +126,14 @@ import React, { useContext, useState } from "react";
             >
               Spelkalender
             </Link>
+            <Link
+              to="/predict-result"
+              className="block py-2 px-4 hover:bg-gray-600 rounded"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Predict
+            </Link>
+
 
             {/* Links based on user roles */}
             {authState.isLoggedIn && authState.role === "beheer" && (
