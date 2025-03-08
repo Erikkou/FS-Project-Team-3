@@ -36,4 +36,12 @@ class UserRepository extends LazyServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    public function findAllOrderedByScores(): array
+    {
+        return $this->createQueryBuilder('u')
+            ->orderBy('u.scores', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

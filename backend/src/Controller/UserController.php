@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -97,6 +98,22 @@ class UserController extends AbstractController
         $this->entityManager->flush();
 
         return new JsonResponse(['status' => 'Email updated'], Response::HTTP_OK);
+    }
+
+    #[Route('/api/users/scores', name: 'api_users_scores', methods: ['GET'])]
+    public function getUsersWithScores(UserRepository $userRepository): JsonResponse
+    {
+        $users = $userRepository->findAllOrderedByScores();
+
+        $usersWithScores = [];
+        foreach ($users as $user) {
+            $usersWithScores[] = [
+                'username' => $user->getUsername(),
+                'scores' => $user->getScores(),
+            ];
+        }
+
+        return new JsonResponse($usersWithScores);
     }
 
     #[Route('/api/users/avatar', name: 'update_avatar', methods: ['POST'])]
