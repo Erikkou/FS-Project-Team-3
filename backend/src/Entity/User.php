@@ -33,6 +33,26 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $avatar;
 
+    #[ORM\Column(type: 'integer')]
+    private int $scores = 0;
+
+    public function getScores(): int
+    {
+        return $this->scores;
+    }
+
+    public function setScores(int $scores): self
+    {
+        $this->scores = $scores;
+        return $this;
+    }
+
+    public function addScores(int $points): self
+    {
+        $this->scores += $points;
+        return $this;
+    }
+
     public function getAvatar(): ?string
     {
         return $this->avatar;

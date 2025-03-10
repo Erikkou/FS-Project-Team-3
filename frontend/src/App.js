@@ -34,6 +34,7 @@ import GameDetails from "./pages/GameDetails";
 // Auth Context
 import {AuthProvider} from "./AuthContext";
 import LeaderboardDetailsPopup from "./pages/LeaderboardDetailsPopup";
+import UserScoresPage from "./pages/UserScoresPage";
 
 const App = () => {
     return (
@@ -51,6 +52,7 @@ const App = () => {
                             <Route path="/blog/show/:id" element={<BlogDetails/>}/>
                             <Route path="/games-overview" element={<GamesOverview/>}/>
                             <Route path="/game-details/:gameId" element={<GameDetails/>}/>
+                            <Route path="/user-scores" element={<UserScoresPage/>}/>
 
                             {/* Admin Routes */}
                             <Route path="/admin" element={<AdminLayout/>}/>

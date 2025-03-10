@@ -85,25 +85,33 @@ Controleer de rechten van je projectdirectory (op je hostmachine) en zorg ervoor
 sudo chmod -R 777 .
 
 ### Data base commando's
+```bash
 php bin/console doctrine:database:drop --force
-
+```
+```bash
 php bin/console doctrine:database:create
+```
 
+```bash
 php bin/console make:migration
-
+```
+```bash
 php bin/console doctrine:migrations:migrate
-
+```
+```bash
 php bin/console doctrine:schema:update --force
-
-
+```
+```bash
 rm -rf migrations/*
-
+```
+```bash
 php bin/console doctrine:schema:validate
-
-
+```
+```bash
 php bin/console doctrine:migrations:diff
+```
+```bash
+docker exec -i mariadb mariadb-dump -u myuser -p mydatabase > database/init/database_dump.sql
+```
 
-mariadb-dump -u myuser -p mydatabase > database_dump.sql
-
-docker cp mariadb:/tmp/database_dump.sql ./database_dump.sql
 
