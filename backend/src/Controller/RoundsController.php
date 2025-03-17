@@ -73,9 +73,13 @@ class RoundsController extends AbstractController
             ->setParameter('weekEnd', $weekEnd)
             ->getQuery()
             ->getResult();
-
+        
         if (!$rounds) {
-            return new JsonResponse(['error' => 'No rounds found for this week'], 404);
+            $rounds = $this->entityManager->getRepository(Rounds::class)->createQueryBuilder('r')
+                ->orderBy('r.start_at', 'ASC')
+                ->setMaxResults(1)
+                ->getQuery()
+                ->getResult();
         }
 
         // Format response
