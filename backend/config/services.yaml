@@ -7,6 +7,7 @@
 parameters:
   kernel.logs_dir: '%kernel.project_dir%/var/log'
   uploads_directory: '%kernel.project_dir%/public/uploads/avatars'
+  sportmonks_api_token: '%env(SPORT_MONKS_API_TOKEN)%'
 
 services:
   # default configuration for services in *this* file
