@@ -32,13 +32,27 @@ class ApiClient
     {
         $query['api_token'] = $this->apiToken;
 
-        $response = $this->client->request('GET', 'https://api.sportmonks.com/v3/football/' . $endpoint, [
-            'query' => $query,
-            'headers' => [
-                'Accept' => 'application/json',
-            ],
-        ]);
+        try {
+            $response = $this->client->request('GET', 'https://api.sportmonks.com/v3/football/' . $endpoint, [
+                'query' => $query,
+                'headers' => [
+                    'Accept' => 'application/json',
+                ],
+            ]);
 
-        return $response->toArray();
+            $data = $response->toArray();
+
+            // Controleer of 'data' aanwezig is en een array is
+            if (!isset($data['data']) || !is_array($data['data'])) {
+                throw new \Exception('Geen geldige data ontvangen van de API: ' . json_encode($data));
+            }
+
+            return $data['data'];
+        } catch (TransportExceptionInterface|ServerExceptionInterface|
+        RedirectionExceptionInterface|DecodingExceptionInterface|
+        ClientExceptionInterface $e) {
+            throw new \Exception('API-aanvraag mislukt: ' . $e->getMessage());
+        }
     }
+
 }
