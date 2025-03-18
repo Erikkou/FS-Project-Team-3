@@ -23,7 +23,6 @@ final class Version20250317212753 extends AbstractMigration
         $this->addSql('CREATE TABLE prediction (id INT AUTO_INCREMENT NOT NULL, user_id INT NOT NULL, match_id INT NOT NULL, home_team_score INT NOT NULL, away_team_score INT NOT NULL, points INT DEFAULT 0 NOT NULL, created_at DATETIME NOT NULL, INDEX IDX_36396FC8A76ED395 (user_id), INDEX IDX_36396FC82ABEACD6 (match_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
         $this->addSql('ALTER TABLE prediction ADD CONSTRAINT FK_36396FC8A76ED395 FOREIGN KEY (user_id) REFERENCES user (id)');
         $this->addSql('ALTER TABLE prediction ADD CONSTRAINT FK_36396FC82ABEACD6 FOREIGN KEY (match_id) REFERENCES calendar (id)');
-        $this->addSql('DROP TABLE matches');
         $this->addSql('ALTER TABLE calendar ADD CONSTRAINT FK_6EA9A146E5C617D0 FOREIGN KEY (home_team) REFERENCES team (id)');
         $this->addSql('ALTER TABLE calendar ADD CONSTRAINT FK_6EA9A146558F2381 FOREIGN KEY (away_team) REFERENCES team (id)');
         $this->addSql('ALTER TABLE calendar ADD CONSTRAINT FK_6EA9A1467E860E36 FOREIGN KEY (stadium_id) REFERENCES stadium (id)');

@@ -24,16 +24,13 @@ final class Version20250127000457 extends AbstractMigration
             'CREATE TABLE blog (id INT AUTO_INCREMENT NOT NULL, title VARCHAR(255) NOT NULL, description LONGTEXT NOT NULL, img VARCHAR(255) DEFAULT NULL, author VARCHAR(255) NOT NULL, date DATETIME NOT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB'
         );
         $this->addSql(
-            'CREATE TABLE calendar (id INT AUTO_INCREMENT NOT NULL, home_team_id INT NOT NULL, away_team_id INT DEFAULT NULL, stadium_id_id INT DEFAULT NULL, round_id_id INT DEFAULT NULL, starting_at DATE NOT NULL, INDEX IDX_6EA9A1469C4C13F6 (home_team_id), INDEX IDX_6EA9A14645185D02 (away_team_id), INDEX IDX_6EA9A146DCFF57F7 (stadium_id_id), INDEX IDX_6EA9A146A9378AAE (round_id_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB'
+            'CREATE TABLE calendar (id INT AUTO_INCREMENT NOT NULL, home_team INT NOT NULL, away_team INT DEFAULT NULL, stadium_id INT DEFAULT NULL, round_id INT DEFAULT NULL, starting_at DATE NOT NULL, INDEX IDX_6EA9A1469C4C13F6 (home_team), INDEX IDX_6EA9A14645185D02 (away_team), INDEX IDX_6EA9A146DCFF57F7 (stadium_id), INDEX IDX_6EA9A146A9378AAE (round_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB'
         );
         $this->addSql(
             'CREATE TABLE player (id INT NOT NULL, team_id INT NOT NULL, name VARCHAR(255) NOT NULL, display_name VARCHAR(255) NOT NULL, jersey_number INT DEFAULT NULL, position_id INT DEFAULT NULL, detailed_position_id INT DEFAULT NULL, price VARCHAR(255) NOT NULL, INDEX IDX_98197A65296CD8AE (team_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB'
         );
         $this->addSql(
             'CREATE TABLE rounds (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(255) NOT NULL, start_at DATE NOT NULL, end_at DATE NOT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB'
-        );
-        $this->addSql(
-            'CREATE TABLE scores (id INT AUTO_INCREMENT NOT NULL, wedstrijd_name VARCHAR(255) NOT NULL, starting_at DATETIME NOT NULL, end_result_info LONGTEXT DEFAULT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB'
         );
         $this->addSql(
             'CREATE TABLE stadium (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(255) NOT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB'
@@ -45,16 +42,16 @@ final class Version20250127000457 extends AbstractMigration
             'CREATE TABLE user (id INT AUTO_INCREMENT NOT NULL, username VARCHAR(255) NOT NULL, email VARCHAR(255) NOT NULL, password VARCHAR(255) NOT NULL, roles JSON NOT NULL COMMENT \'(DC2Type:json)\', UNIQUE INDEX UNIQ_8D93D649E7927C74 (email), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB'
         );
         $this->addSql(
-            'ALTER TABLE calendar ADD CONSTRAINT FK_6EA9A1469C4C13F6 FOREIGN KEY (home_team_id) REFERENCES team (id)'
+            'ALTER TABLE calendar ADD CONSTRAINT FK_6EA9A1469C4C13F6 FOREIGN KEY (home_team) REFERENCES team (id)'
         );
         $this->addSql(
-            'ALTER TABLE calendar ADD CONSTRAINT FK_6EA9A14645185D02 FOREIGN KEY (away_team_id) REFERENCES team (id)'
+            'ALTER TABLE calendar ADD CONSTRAINT FK_6EA9A14645185D02 FOREIGN KEY (away_team) REFERENCES team (id)'
         );
         $this->addSql(
-            'ALTER TABLE calendar ADD CONSTRAINT FK_6EA9A146DCFF57F7 FOREIGN KEY (stadium_id_id) REFERENCES stadium (id)'
+            'ALTER TABLE calendar ADD CONSTRAINT FK_6EA9A146DCFF57F7 FOREIGN KEY (stadium_id) REFERENCES stadium (id)'
         );
         $this->addSql(
-            'ALTER TABLE calendar ADD CONSTRAINT FK_6EA9A146A9378AAE FOREIGN KEY (round_id_id) REFERENCES rounds (id)'
+            'ALTER TABLE calendar ADD CONSTRAINT FK_6EA9A146A9378AAE FOREIGN KEY (round_id) REFERENCES rounds (id)'
         );
         $this->addSql(
             'ALTER TABLE player ADD CONSTRAINT FK_98197A65296CD8AE FOREIGN KEY (team_id) REFERENCES team (id)'
@@ -77,7 +74,6 @@ final class Version20250127000457 extends AbstractMigration
         $this->addSql('DROP TABLE calendar');
         $this->addSql('DROP TABLE player');
         $this->addSql('DROP TABLE rounds');
-        $this->addSql('DROP TABLE scores');
         $this->addSql('DROP TABLE stadium');
         $this->addSql('DROP TABLE team');
         $this->addSql('DROP TABLE user');

@@ -7,6 +7,7 @@ use App\Entity\Stadium;
 use App\Entity\Team;
 use App\Utils\ApiClient;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
@@ -19,9 +20,11 @@ use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 class CalendarController extends AbstractController
 {
     public function __construct(
-        private readonly ApiClient $apiClient,
-        private readonly EntityManagerInterface $entityManager
-    ) {
+        private readonly ApiClient              $apiClient,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly LoggerInterface        $logger
+    )
+    {
     }
 
     /**
@@ -37,16 +40,21 @@ class CalendarController extends AbstractController
     {
         $response = $this->apiClient->request('rounds/seasons/23628', ['include' => 'fixtures', 'league_id' => 72]);
 
+        if (!isset($response['data'])) {
+            $this->logger->error('No data found in API response');
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => 'No data found in API response',
+            ], 404);
+        }
+
         $newMatches = [];
         foreach ($response['data'] as $fixtures) {
             foreach ($fixtures['fixtures'] as $fixture) {
                 // Controleer of de match al bestaat
                 $existingMatch = $this->entityManager->getRepository(Calendar::class)->find($fixture['id']);
                 if ($existingMatch) {
-                    return new JsonResponse([
-                        'status' => 'Exists',
-                        'Message' => 'The matches have been saved',
-                    ]);
+                    continue;
                 }
 
                 [$home, $away] = explode('vs', $fixture['name']);
@@ -56,7 +64,8 @@ class CalendarController extends AbstractController
                     ->setStadium($fixture['venue_id'])
                     ->setHomeTeam($this->getTeamId(trim($home)))
                     ->setAwayTeam($this->getTeamId(trim($away)))
-                    ->setStartingAt((new \DateTime($fixture['starting_at'])));
+                    ->setStartingAt((new \DateTime($fixture['starting_at'])))
+                    ->setStatus($this->mapStatus($fixture['state_id']));
 
                 $newMatches[$fixture['round_id']][] = $fixture['id'];
                 $this->entityManager->persist($calendar);
@@ -109,6 +118,16 @@ class CalendarController extends AbstractController
     {
         $stadium = $this->entityManager->getRepository(Stadium::class)->findOneBy(['id' => $stadiumId]);
         return $stadium ? $stadium->getName() : 'Niet bepaald';
+    }
+
+    private function mapStatus(int $stateId): string
+    {
+        return match ($stateId) {
+            1 => 'scheduled',
+            2 => 'finished',
+            3 => 'canceled',
+            default => throw new \InvalidArgumentException("Unknown state_id: $stateId"),
+        };
     }
 
 }
