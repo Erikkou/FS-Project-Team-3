@@ -17,14 +17,14 @@ crontab -e
 ```
 
 Voeg de cron job toe:
-Dit zorgt ervoor dat het script "UpdatePredictionsCommand.php" elke maand om 3 uur 's nachts draait:
+Dit zorgt ervoor dat het script "SetRoundsCommand.php" elke maand om 3 uur 's nachts draait:
 
 ```
 0 3 1 * * /usr/local/bin/php /var/www/bin/console app:set-rounds >> /var/log/predictions.log 2>&1
 
 ```
 
-Wil je het elke week laten draaien? Gebruik dan:
+Wil je het elke week laten draaien? Gebruik dan dit commando voor "UpdatePredictionsCommand.php":
 
 ```
 0 2 * * 0 /usr/local/bin/php /var/www/bin/console app:update-predictions >> /var/log/predictions.log 2>&1
