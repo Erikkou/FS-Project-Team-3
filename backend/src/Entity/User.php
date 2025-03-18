@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -35,6 +37,39 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(type: 'integer')]
     private int $scores = 0;
+
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Prediction::class, cascade: ['persist', 'remove'])]
+    private Collection $predictions;
+
+    public function __construct()
+    {
+        $this->predictions = new ArrayCollection();
+    }
+
+    public function getPredictions(): Collection
+    {
+        return $this->predictions;
+    }
+
+    public function addPrediction(Prediction $prediction): self
+    {
+        if (!$this->predictions->contains($prediction)) {
+            $this->predictions->add($prediction);
+            $prediction->setUser($this);
+        }
+        return $this;
+    }
+
+    public function removePrediction(Prediction $prediction): self
+    {
+        if ($this->predictions->removeElement($prediction)) {
+            if ($prediction->getUser() === $this) {
+                $prediction->setUser(null);
+            }
+        }
+        return $this;
+    }
+
 
     public function getScores(): int
     {

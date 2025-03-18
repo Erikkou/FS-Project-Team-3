@@ -24,6 +24,21 @@ class Rounds
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTimeInterface $end_at = null;
 
+    #[ORM\OneToMany(mappedBy: "round", targetEntity: Calendar::class, cascade: ['persist', 'remove'])]
+    private Collection $calendars;
+
+
+    public function __construct()
+    {
+        $this->calendars = new ArrayCollection();
+    }
+
+    public function getCalendars(): Collection
+    {
+        return $this->calendars;
+    }
+
+
 
     public function getId(): ?int
     {
@@ -72,5 +87,7 @@ class Rounds
 
         return $this;
     }
+
+
 
 }

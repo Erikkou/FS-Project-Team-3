@@ -20,10 +20,11 @@ class RoundsController extends AbstractController
 {
 
     public function __construct(
-        private readonly ApiClient $client,
+        private readonly ApiClient              $client,
         private readonly EntityManagerInterface $entityManager,
 
-    ) {
+    )
+    {
     }
 
     /**
@@ -62,19 +63,17 @@ class RoundsController extends AbstractController
     #[Route('/api/show/rounds/week', name: 'show_rounds_week', methods: ['GET'])]
     public function showRoundsPerWeek(): JsonResponse
     {
-        $weekStart = new \DateTime('monday this week');
-        $weekEnd = new \DateTime('sunday this week');
-        $weekEnd->setTime(23, 59, 59);
+        $weekStart = new \DateTimeImmutable('monday this week 00:00:00');
+        $weekEnd = new \DateTimeImmutable('sunday this week 23:59:59');
 
-        // Fetch rounds from the database that fall within this week
         $rounds = $this->entityManager->getRepository(Rounds::class)->createQueryBuilder('r')
             ->where('r.start_at BETWEEN :weekStart AND :weekEnd')
             ->setParameter('weekStart', $weekStart)
             ->setParameter('weekEnd', $weekEnd)
             ->getQuery()
             ->getResult();
-        
-        if (!$rounds) {
+
+        if (empty($rounds)) {
             $rounds = $this->entityManager->getRepository(Rounds::class)->createQueryBuilder('r')
                 ->orderBy('r.start_at', 'ASC')
                 ->setMaxResults(1)
@@ -82,10 +81,9 @@ class RoundsController extends AbstractController
                 ->getResult();
         }
 
-        // Format response
         $data = [];
         foreach ($rounds as $round) {
-            $data = [
+            $data[] = [
                 'id' => $round->getId(),
                 'name' => $round->getName(),
                 'starting_at' => $round->getStartAt()->format('Y-m-d'),
@@ -107,7 +105,7 @@ class RoundsController extends AbstractController
         // Get the highest round number (last round)
         $maxRound = $this->entityManager->getRepository(Rounds::class)
             ->createQueryBuilder('r')
-            ->select('MAX(r.id)') // Assuming id is sequential, otherwise change to name parsing
+            ->select('MAX(r.id)')
             ->getQuery()
             ->getSingleScalarResult();
 

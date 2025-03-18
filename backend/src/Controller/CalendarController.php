@@ -52,8 +52,8 @@ class CalendarController extends AbstractController
                 [$home, $away] = explode('vs', $fixture['name']);
                 $calendar = new Calendar();
                 $calendar->setId($fixture['id'])
-                    ->setRoundId($fixture['round_id'])
-                    ->setStadiumId($fixture['venue_id'])
+                    ->setRound($fixture['round_id'])
+                    ->setStadium($fixture['venue_id'])
                     ->setHomeTeam($this->getTeamId(trim($home)))
                     ->setAwayTeam($this->getTeamId(trim($away)))
                     ->setStartingAt((new \DateTime($fixture['starting_at'])));
@@ -92,11 +92,12 @@ class CalendarController extends AbstractController
         return new JsonResponse($data);
     }
 
-    protected function getTeamId(string $team)
+    protected function getTeamId(string $team): ?int
     {
-        $teamId = $this->entityManager->getRepository(Team::class)->findOneBy(['name' => $team]);
-        return $teamId ? $teamId->getId() : 'Geen team gevonden';
+        $teamEntity = $this->entityManager->getRepository(Team::class)->findOneBy(['name' => $team]);
+        return $teamEntity ? $teamEntity->getId() : null;
     }
+
 
     protected function getTeamName(int $teamId)
     {
