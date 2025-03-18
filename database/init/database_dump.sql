@@ -57,7 +57,18 @@ CREATE TABLE `calendar` (
   `away_team` int(11) NOT NULL,
   `stadium_id` int(11) NOT NULL,
   `round_id` int(11) NOT NULL,
-  PRIMARY KEY (`id`)
+  `status` varchar(50) NOT NULL,
+  `home_score` int(11) DEFAULT NULL,
+  `away_score` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `IDX_6EA9A146E5C617D0` (`home_team`),
+  KEY `IDX_6EA9A146558F2381` (`away_team`),
+  KEY `IDX_6EA9A1467E860E36` (`stadium_id`),
+  KEY `IDX_6EA9A146A6005CA0` (`round_id`),
+  CONSTRAINT `FK_6EA9A146558F2381` FOREIGN KEY (`away_team`) REFERENCES `team` (`id`),
+  CONSTRAINT `FK_6EA9A1467E860E36` FOREIGN KEY (`stadium_id`) REFERENCES `stadium` (`id`),
+  CONSTRAINT `FK_6EA9A146A6005CA0` FOREIGN KEY (`round_id`) REFERENCES `rounds` (`id`),
+  CONSTRAINT `FK_6EA9A146E5C617D0` FOREIGN KEY (`home_team`) REFERENCES `team` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -861,6 +872,39 @@ INSERT INTO `player` VALUES
 UNLOCK TABLES;
 
 --
+-- Table structure for table `prediction`
+--
+
+DROP TABLE IF EXISTS `prediction`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `prediction` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `match_id` int(11) NOT NULL,
+  `home_team_score` int(11) NOT NULL,
+  `away_team_score` int(11) NOT NULL,
+  `points` int(11) NOT NULL DEFAULT 0,
+  `created_at` datetime NOT NULL,
+  `status` varchar(20) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `IDX_36396FC8A76ED395` (`user_id`),
+  KEY `IDX_36396FC82ABEACD6` (`match_id`),
+  CONSTRAINT `FK_36396FC82ABEACD6` FOREIGN KEY (`match_id`) REFERENCES `calendar` (`id`),
+  CONSTRAINT `FK_36396FC8A76ED395` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `prediction`
+--
+
+LOCK TABLES `prediction` WRITE;
+/*!40000 ALTER TABLE `prediction` DISABLE KEYS */;
+/*!40000 ALTER TABLE `prediction` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `rounds`
 --
 
@@ -897,6 +941,9 @@ CREATE TABLE `scores` (
   `wedstrijd_name` varchar(255) NOT NULL,
   `starting_at` datetime NOT NULL,
   `end_result_info` longtext DEFAULT NULL,
+  `status` varchar(50) NOT NULL,
+  `home_score` int(11) DEFAULT NULL,
+  `away_score` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -1009,8 +1056,8 @@ CREATE TABLE `user` (
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
 INSERT INTO `user` VALUES
-(3,'testuser','test@test','$2y$13$LK5Nt17SSy3cq.6nuBecaOaQ5hv59sPna1bbBoZhxttV2uZXhNR7y','[\"ROLE_USER\"]','/uploads/avatars/67bc9ade6b962.jpg',0),
-(5,'Nver','nver.am@live.nl','$2y$13$M5fFHID/FjBn2D9ArhS3Bu7iH2UtppD7rLYa/0jC3ZwH/aS1DnmOW','[\"ROLE_USER\"]','/uploads/avatars/67c4a4e53ce36.jpg',0);
+(3,'testuser','test@test','$2y$13$LK5Nt17SSy3cq.6nuBecaOaQ5hv59sPna1bbBoZhxttV2uZXhNR7y','[\"ROLE_USER\"]','/uploads/avatars/67bc9ade6b962.jpg',18),
+(5,'Nver','nver.am@live.nl','$2y$13$M5fFHID/FjBn2D9ArhS3Bu7iH2UtppD7rLYa/0jC3ZwH/aS1DnmOW','[\"ROLE_USER\"]','/uploads/avatars/67cc812f86333.jpg',20);
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -1023,4 +1070,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2025-03-08 16:48:37
+-- Dump completed on 2025-03-18  0:30:57
