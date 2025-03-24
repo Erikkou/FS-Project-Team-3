@@ -87,12 +87,9 @@ class RoundsController extends AbstractController
             ->orderBy('r.start_at', 'ASC')
             ->getQuery()
             ->getResult();
-
         // Als er geen rondes zijn deze week, pak de eerstvolgende
         if (empty($rounds)) {
             $rounds = $this->entityManager->getRepository(Rounds::class)->createQueryBuilder('r')
-                ->where('r.start_at > :today')
-                ->setParameter('today', new \DateTimeImmutable())
                 ->orderBy('r.start_at', 'ASC')
                 ->setMaxResults(1)
                 ->getQuery()
@@ -104,12 +101,15 @@ class RoundsController extends AbstractController
             return new JsonResponse(['message' => 'Geen rondes gevonden voor deze week of daarna'], 404);
         }
 
-        $data = array_map(fn($round) => [
-            'id' => $round->getId(),
-            'name' => $round->getName(),
-            'starting_at' => $round->getStartAt()->format('Y-m-d H:i:s'),
-            'ending_at' => $round->getEndAt()->format('Y-m-d H:i:s'),
-        ], $rounds);
+        $data = [];
+        foreach ($rounds as $round) {
+            $data = [
+                'id' => $round->getId(),
+                'name' => $round->getName(),
+                'starting_at' => $round->getStartAt()->format('Y-m-d'),
+                'ending_at' => $round->getEndAt()->format('Y-m-d'),
+            ];
+        }
 
         return new JsonResponse($data);
     }

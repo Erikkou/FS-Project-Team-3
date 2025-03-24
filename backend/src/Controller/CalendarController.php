@@ -5,9 +5,9 @@ namespace App\Controller;
 use App\Entity\Calendar;
 use App\Entity\Stadium;
 use App\Entity\Team;
-use App\Repository\CalendarRepository;
 use App\Utils\ApiClient;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -21,11 +21,10 @@ use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 class CalendarController extends AbstractController
 {
     public function __construct(
-        private readonly ApiClient              $apiClient,
+        private readonly ApiClient $apiClient,
         private readonly EntityManagerInterface $entityManager,
-        private readonly LoggerInterface        $logger
-    )
-    {
+        private readonly LoggerInterface $logger
+    ) {
     }
 
     /**
@@ -35,6 +34,7 @@ class CalendarController extends AbstractController
      * @throws ServerExceptionInterface
      * @throws TransportExceptionInterface
      * @throws \DateMalformedStringException
+     * @throws InvalidArgumentException
      */
     #[Route('/calendar', name: 'set-calendar')]
     public function calender(): JsonResponse
@@ -82,7 +82,7 @@ class CalendarController extends AbstractController
     #[Route('/calendar/round/{roundId}', name: 'show-calendar')]
     public function showCalendar(int $roundId): JsonResponse
     {
-        $matches = $this->entityManager->getRepository(Calendar::class)->findBy(['round_id' => $roundId]);
+        $matches = $this->entityManager->getRepository(Calendar::class)->findBy(['round' => $roundId]);
         if (count($matches) === 0) {
             return new JsonResponse([
                 'status' => 'ERROR',
@@ -91,12 +91,12 @@ class CalendarController extends AbstractController
         }
         $data = [];
         foreach ($matches as $match) {
-            $data[$match->getRoundId()][] = [
+            $data[$match->getRound()?->getId()][] = [
                 'id' => $match->getId(),
-                'home_team' => $this->getTeamName($match->getHomeTeam()),
-                'away_team' => $this->getTeamName($match->getAwayTeam()),
-                'date' => $match->getStartingAt()->format('Y-m-d'),
-                'stadium' => $this->getStadiumName($match->getStadium()),
+                'home_team' => $this->getTeamName($match->getHomeTeam()?->getId()),
+                'away_team' => $this->getTeamName($match->getAwayTeam()?->getId()),
+                'date' => $match->getStartingAt()?->format('Y-m-d'),
+                'stadium' => $this->getStadiumName($match->getStadium()?->getId()),
             ];
         }
         return new JsonResponse($data);
