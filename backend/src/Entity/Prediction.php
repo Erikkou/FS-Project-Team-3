@@ -105,15 +105,19 @@ class Prediction
     {
         if ($this->homeTeamScore === $actualHomeScore && $this->awayTeamScore === $actualAwayScore) {
             $this->points = 9; // Exacte score goed
-        } elseif (($this->homeTeamScore - $this->awayTeamScore) === ($actualHomeScore - $actualAwayScore)) {
-            $this->points = 6; // Juiste winnaar, verkeerde score
         } elseif (
             ($this->homeTeamScore > $this->awayTeamScore && $actualHomeScore > $actualAwayScore) ||
             ($this->homeTeamScore < $this->awayTeamScore && $actualHomeScore < $actualAwayScore)
         ) {
-            $this->points = 3; // Juiste winnaar, geen exacte score
+            // Juiste winnaar, controleren of het doelsaldo ook klopt
+            if (($this->homeTeamScore - $this->awayTeamScore) === ($actualHomeScore - $actualAwayScore)) {
+                $this->points = 6; // Juiste winnaar, correcte doelsaldo, maar verkeerde score
+            } else {
+                $this->points = 3; // Juiste winnaar, maar volledig verkeerde score
+            }
         } else {
             $this->points = 0; // Helemaal fout
         }
     }
+
 }

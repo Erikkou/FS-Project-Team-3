@@ -60,8 +60,9 @@ class PredictionRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('p')
             ->join('p.match', 'm')
-            ->where('m.status = :pending')
-            ->setParameter('pending', 'scheduled')
+            ->where('m.status = :finished')
+            ->andWhere('p.points IS NULL') // Zorgt ervoor dat alleen niet-verwerkte voorspellingen worden opgehaald
+            ->setParameter('finished', 'finished')
             ->getQuery()
             ->getResult();
     }

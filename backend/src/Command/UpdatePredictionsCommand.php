@@ -31,10 +31,10 @@ class UpdatePredictionsCommand extends Command
         $predictions = $this->predictionRepository->findAllPendingPredictions();
 
         foreach ($predictions as $prediction) {
-            $match = $prediction->getMatch(); // Ophalen van de gekoppelde wedstrijd (Calendar)
+            $match = $prediction->getMatch();
 
-            // Controleer of de wedstrijd is afgelopen
-            if ($match->getStatus() !== 'finished') {
+            // Controleer of de wedstrijd echt is afgelopen
+            if ($match->getStatus() !== 'finished' || $match->getHomeScore() === null || $match->getAwayScore() === null) {
                 continue;
             }
 
@@ -43,13 +43,13 @@ class UpdatePredictionsCommand extends Command
             $awayScore = $match->getAwayScore();
 
             // Bereken punten
-            $oldPoints = $prediction->getPoints();
+            $oldPoints = $prediction->getPoints() ?? 0; // Voorkom fouten als het null is
             $prediction->calculatePoints($homeScore, $awayScore);
             $newPoints = $prediction->getPoints();
 
             // Update gebruiker score
             $user = $prediction->getUser();
-            $user->setScores($user->getScores() - $oldPoints + $newPoints);
+            $user->setScores(max(0, $user->getScores() - $oldPoints + $newPoints));
 
             // Opslaan in database
             $this->em->persist($prediction);
@@ -61,4 +61,5 @@ class UpdatePredictionsCommand extends Command
         $output->writeln('Voorspellingen en scores bijgewerkt!');
         return Command::SUCCESS;
     }
+
 }
