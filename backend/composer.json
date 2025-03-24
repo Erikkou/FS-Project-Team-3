@@ -22,7 +22,10 @@
         "lcobucci/jwt": "^5.0",
         "symfony/http-client": "^6.3",
         "symfony/monolog-bundle": "^3.10",
-        "symfony/mime": "^6.3"
+        "symfony/mime": "^6.3",
+        "symfony/cache": "^6.3",
+        "symfony/serializer": "^6.3",
+        "doctrine/annotations": "^2.0"
     },
     "autoload": {
         "psr-4": {

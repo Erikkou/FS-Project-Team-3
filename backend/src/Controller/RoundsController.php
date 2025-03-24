@@ -20,10 +20,10 @@ class RoundsController extends AbstractController
 {
 
     public function __construct(
-        private readonly ApiClient $client,
         private readonly EntityManagerInterface $entityManager,
 
-    ) {
+    )
+    {
     }
 
     /**
@@ -34,64 +34,82 @@ class RoundsController extends AbstractController
      * @throws ClientExceptionInterface
      * @throws \DateMalformedStringException
      */
-    #[Route('/api/set/rounds', name: 'set_rounds')]
-    public function setRounds(): JsonResponse
-    {
-        $response = $this->client->request('rounds', ['filters' => 'roundSeasons:23628']);
-        foreach ($response['data'] as $round) {
-            // Check if the round have been already saved in DB
-            $existingRound = $this->entityManager->getRepository(Rounds::class)->find($round['id']);
-            if ($existingRound) {
-                return new JsonResponse([
-                    'status' => 'Exists',
-                    'Message' => 'The round have been saved',
-                ]);
-            }
-
-            $rounds = new Rounds();
-            $rounds->setId($round['id'])
-                ->setName(sprintf('Round %s', $round['name']))
-                ->setStartAt(new \DateTime($round['starting_at']))
-                ->setEndAt(new \DateTime($round['ending_at']));
-            $this->entityManager->persist($rounds);
-        }
-        $this->entityManager->flush();
-        return new JsonResponse(['status' => 'success', 'message' => 'Rounds have been saved']);
-    }
+//    #[Route('/api/set/rounds', name: 'set_rounds')]
+//    public function setRounds(): JsonResponse
+//    {
+//        try {
+//            $response = $this->client->request('rounds', ['filters' => 'roundSeasons:23628']);
+//
+//            //  Check of er 'data' in de response zit
+//            if (!isset($response['data']) || !is_array($response['data'])) {
+//                return new JsonResponse(['status' => 'error', 'message' => 'Ongeldige API-response of geen data ontvangen'], 400);
+//            }
+//
+//
+//            $newRounds = 0;
+//            foreach ($response['data'] as $round) {
+//                $existingRound = $this->entityManager->getRepository(Rounds::class)->find($round['id']);
+//
+//                if (!$existingRound) {
+//                    $newRound = new Rounds();
+//                    $newRound->setId($round['id'])
+//                        ->setName(sprintf('Round %s', $round['name']))
+//                        ->setStartAt(new \DateTime($round['starting_at']))
+//                        ->setEndAt(new \DateTime($round['ending_at']));
+//
+//                    $this->entityManager->persist($newRound);
+//                    $newRounds++;
+//                }
+//            }
+//
+//            // Data opslaan in database
+//            $this->entityManager->flush();
+//
+//            return new JsonResponse([
+//                'status' => 'success',
+//                'message' => "$newRounds nieuwe rondes opgeslagen"
+//            ]);
+//        } catch (\Exception $e) {
+//            return new JsonResponse(['status' => 'error', 'message' => $e->getMessage()], 500);
+//        }
+//    }
 
     #[Route('/api/show/rounds/week', name: 'show_rounds_week', methods: ['GET'])]
     public function showRoundsPerWeek(): JsonResponse
     {
-        $weekStart = new \DateTime('monday this week');
-        $weekEnd = new \DateTime('sunday this week');
-        $weekEnd->setTime(23, 59, 59);
+        $weekStart = new \DateTimeImmutable('monday this week 00:00:00');
+        $weekEnd = new \DateTimeImmutable('sunday this week 23:59:59');
 
-        // Fetch rounds from the database that fall within this week
         $rounds = $this->entityManager->getRepository(Rounds::class)->createQueryBuilder('r')
             ->where('r.start_at BETWEEN :weekStart AND :weekEnd')
             ->setParameter('weekStart', $weekStart)
             ->setParameter('weekEnd', $weekEnd)
+            ->orderBy('r.start_at', 'ASC')
             ->getQuery()
             ->getResult();
-        
-        if (!$rounds) {
+
+        // Als er geen rondes zijn deze week, pak de eerstvolgende
+        if (empty($rounds)) {
             $rounds = $this->entityManager->getRepository(Rounds::class)->createQueryBuilder('r')
+                ->where('r.start_at > :today')
+                ->setParameter('today', new \DateTimeImmutable())
                 ->orderBy('r.start_at', 'ASC')
                 ->setMaxResults(1)
                 ->getQuery()
                 ->getResult();
         }
 
-        // Format response
-        $data = [];
-        foreach ($rounds as $round) {
-            $data = [
-                'id' => $round->getId(),
-                'name' => $round->getName(),
-                'starting_at' => $round->getStartAt()->format('Y-m-d'),
-                'ending_at' => $round->getEndAt()->format('Y-m-d'),
-            ];
+        // Controle of er nog steeds geen rondes zijn
+        if (empty($rounds)) {
+            return new JsonResponse(['message' => 'Geen rondes gevonden voor deze week of daarna'], 404);
         }
+
+        $data = array_map(fn($round) => [
+            'id' => $round->getId(),
+            'name' => $round->getName(),
+            'starting_at' => $round->getStartAt()->format('Y-m-d H:i:s'),
+            'ending_at' => $round->getEndAt()->format('Y-m-d H:i:s'),
+        ], $rounds);
 
         return new JsonResponse($data);
     }
@@ -104,35 +122,33 @@ class RoundsController extends AbstractController
     #[Route('/api/show/rounds/{currentRound}', name: 'show_previous_next_round', methods: ['GET'])]
     public function showPreviousNextRound(int $currentRound): JsonResponse
     {
-        // Get the highest round number (last round)
+        // Check of ronde bestaat
+        $currentRoundData = $this->entityManager->getRepository(Rounds::class)->find($currentRound);
+        if (!$currentRoundData) {
+            return new JsonResponse(['error' => 'Ronde niet gevonden'], 404);
+        }
+
+        // Bepaal de max ronde (laatste ronde)
         $maxRound = $this->entityManager->getRepository(Rounds::class)
             ->createQueryBuilder('r')
-            ->select('MAX(r.id)') // Assuming id is sequential, otherwise change to name parsing
+            ->select('MAX(r.id)')
             ->getQuery()
             ->getSingleScalarResult();
 
-        // Get previous and next rounds
+        // Ophalen vorige en volgende ronde
         $previousRound = ($currentRound > 1) ?
-            $this->entityManager->getRepository(Rounds::class)->findOneBy(['id' => $currentRound - 1])
-            : null;
+            $this->entityManager->getRepository(Rounds::class)->find($currentRound - 1) : null;
 
         $nextRound = ($currentRound < $maxRound) ?
-            $this->entityManager->getRepository(Rounds::class)->findOneBy(['id' => $currentRound + 1])
-            : null;
+            $this->entityManager->getRepository(Rounds::class)->find($currentRound + 1) : null;
 
-        // Get current round
-        $currentRoundData = $this->entityManager->getRepository(Rounds::class)->findOneBy(
-            ['id' => $currentRound]
-        );
-
-        // Build response
-        $data = [
-            'current_round' => $currentRoundData ? [
+        return new JsonResponse([
+            'current_round' => [
                 'id' => $currentRoundData->getId(),
                 'name' => $currentRoundData->getName(),
                 'starting_at' => $currentRoundData->getStartAt()->format('Y-m-d'),
                 'ending_at' => $currentRoundData->getEndAt()->format('Y-m-d'),
-            ] : null,
+            ],
             'previous_round' => $previousRound ? [
                 'id' => $previousRound->getId(),
                 'name' => $previousRound->getName(),
@@ -145,8 +161,6 @@ class RoundsController extends AbstractController
                 'starting_at' => $nextRound->getStartAt()->format('Y-m-d'),
                 'ending_at' => $nextRound->getEndAt()->format('Y-m-d'),
             ] : null,
-        ];
-
-        return new JsonResponse($data);
+        ]);
     }
 }
