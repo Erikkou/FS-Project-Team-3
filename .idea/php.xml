@@ -115,6 +115,8 @@
       <path value="$PROJECT_DIR$/backend/vendor/symfony/property-access" />
       <path value="$PROJECT_DIR$/backend/vendor/symfony/polyfill-intl-idn" />
       <path value="$PROJECT_DIR$/backend/vendor/symfony/mime" />
+      <path value="$PROJECT_DIR$/backend/vendor/symfony/serializer" />
+      <path value="$PROJECT_DIR$/backend/vendor/doctrine/annotations" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.2" />

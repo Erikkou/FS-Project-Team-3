@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Rounds;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -16,28 +17,18 @@ class RoundsRepository extends ServiceEntityRepository
         parent::__construct($registry, Rounds::class);
     }
 
-    //    /**
-    //     * @return Rounds[] Returns an array of Rounds objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('r')
-    //            ->andWhere('r.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('r.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
-
-    //    public function findOneBySomeField($value): ?Rounds
-    //    {
-    //        return $this->createQueryBuilder('r')
-    //            ->andWhere('r.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    /**
+     * @throws NonUniqueResultException
+     */
+    public function findCurrentRound(): ?Rounds
+    {
+        return $this->createQueryBuilder('r')
+            ->where('r.start_at <= :now')
+            ->andWhere('r.end_at >= :now')
+            ->setParameter('now', new \DateTime())
+            ->orderBy('r.start_at', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

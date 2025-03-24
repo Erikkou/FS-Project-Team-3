@@ -5,19 +5,21 @@ namespace App\Entity;
 use App\Repository\CalendarRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: CalendarRepository::class)]
 class Calendar
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
+    #[Groups(["match:read"])]
     #[ORM\ManyToOne(targetEntity: Team::class)]
     #[ORM\JoinColumn(name: "home_team", referencedColumnName: "id", nullable: false)]
     private ?Team $homeTeam = null;
 
+    #[Groups(["match:read"])]
     #[ORM\ManyToOne(targetEntity: Team::class)]
     #[ORM\JoinColumn(name: "away_team", referencedColumnName: "id", nullable: false)]
     private ?Team $awayTeam = null;

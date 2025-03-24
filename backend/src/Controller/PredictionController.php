@@ -18,7 +18,6 @@ use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
-#[Route('/api/predictions')]
 class PredictionController extends AbstractController
 {
     private ApiClient $apiClient;
@@ -28,7 +27,7 @@ class PredictionController extends AbstractController
         $this->apiClient = $apiClient;
     }
 
-    #[Route('', methods: ['POST'])]
+    #[Route('/api/predictions', methods: ['POST'])]
     public function createPrediction(Request $request, EntityManagerInterface $em, CalendarRepository $calendarRepository): JsonResponse
     {
         $data = json_decode($request->getContent(), true);

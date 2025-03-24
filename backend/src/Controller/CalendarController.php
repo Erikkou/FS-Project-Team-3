@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Calendar;
 use App\Entity\Stadium;
 use App\Entity\Team;
+use App\Repository\CalendarRepository;
 use App\Utils\ApiClient;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -95,7 +96,7 @@ class CalendarController extends AbstractController
                 'home_team' => $this->getTeamName($match->getHomeTeam()),
                 'away_team' => $this->getTeamName($match->getAwayTeam()),
                 'date' => $match->getStartingAt()->format('Y-m-d'),
-                'stadium' => $this->getStadiumName($match->getStadiumId()),
+                'stadium' => $this->getStadiumName($match->getStadium()),
             ];
         }
         return new JsonResponse($data);

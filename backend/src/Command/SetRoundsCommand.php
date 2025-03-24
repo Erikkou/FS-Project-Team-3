@@ -22,7 +22,7 @@ use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 class SetRoundsCommand extends Command
 {
     public function __construct(
-        private readonly ApiClient              $client,
+        private readonly ApiClient              $apiClient,
         private readonly EntityManagerInterface $entityManager,
     )
     {
@@ -41,9 +41,15 @@ class SetRoundsCommand extends Command
     {
         $output->writeln('Nieuwe rondes ophalen...');
 
-        $response = $this->client->request('rounds', ['filters' => 'roundSeasons:23628']);
+        $response = $this->apiClient->request('rounds', ['filters' => 'roundSeasons:23628']);
+        sleep(1); // Wacht 1 seconde om de API niet te overbelasten
+        if (empty($response)) {
+            $output->writeln('Fout: API-response is leeg of ongeldig.');
+            dump($response);
+            return Command::FAILURE;
+        }
 
-        foreach ($response['data'] as $round) {
+        foreach ($response as $round) {
             $existingRound = $this->entityManager->getRepository(Rounds::class)->find($round['id']);
             if ($existingRound) {
                 $output->writeln("Ronde {$round['id']} bestaat al, overslaan.");

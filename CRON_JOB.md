@@ -24,6 +24,12 @@ Dit zorgt ervoor dat het script "SetRoundsCommand.php" elke maand om 3 uur 's na
 
 ```
 
+Ophalen van wedstrijden en teams:
+```
+0 3 1 * * /usr/local/bin/php /var/www/bin/console app:import-fixtures >> /var/log/predictions.log 2>&1
+
+```
+
 Wil je het elke week laten draaien? Gebruik dan dit commando voor "UpdatePredictionsCommand.php":
 
 ```
@@ -73,5 +79,17 @@ touch /var/log/predictions.log
 
 ```
 cat /var/log/predictions.log
+```
+#handmatig een cronjob draaien:
+```
+ php bin/console app:set-rounds
+```
+```
+ php bin/console app:import-fixtures
+
+```
+
+```
+php bin/console app:update-predictions
 ```
 

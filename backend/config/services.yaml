@@ -7,8 +7,16 @@
 parameters:
   kernel.logs_dir: '%kernel.project_dir%/var/log'
   uploads_directory: '%kernel.project_dir%/public/uploads/avatars'
+  sportmonks_api_base_url: 'https://api.sportmonks.com/v3/football/'
   sportmonks_api_token: '%env(SPORT_MONKS_API_TOKEN)%'
 services:
+  App\Utils\ApiClient:
+    arguments:
+      $client: '@http_client'
+      $parameterBag: '@parameter_bag'
+      $logger: '@logger'
+      $cache: '@cache.app'
+
   # default configuration for services in *this* file
   _defaults:
     autowire: true      # Automatically injects dependencies in your services.
