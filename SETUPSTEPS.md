@@ -110,8 +110,14 @@ php bin/console doctrine:schema:validate
 ```bash
 php bin/console doctrine:migrations:diff
 ```
+
+Database opslaan in een bestand
 ```bash
 docker exec -i mariadb mariadb-dump -u myuser -p mydatabase > database/init/database_dump.sql
 ```
 
+Database importeren vanuit een bestand
+```bash
+docker exec -i mariadb mariadb -u myuser -pmypassword mydatabase < database/init/database_dump.sql
+```
 
