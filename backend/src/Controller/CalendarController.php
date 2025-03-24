@@ -107,7 +107,8 @@ class CalendarController extends AbstractController
     #[Route('/calendar/round/{roundId}', name: 'show-calendar')]
     public function showCalendar(int $roundId): JsonResponse
     {
-        $matches = $this->entityManager->getRepository(Calendar::class)->findBy(['round' => $roundId]);
+        $matches = $this->entityManager->getRepository(Calendar::class)->findBy(['round' => $roundId],
+            ['starting_at' => 'ASC']);
         if (count($matches) === 0) {
             return new JsonResponse([
                 'status' => 'ERROR',
@@ -144,12 +145,12 @@ class CalendarController extends AbstractController
         return $this->entityManager->getRepository(Rounds::class)->findOneBy(['id' => $roundId]);
     }
 
-    protected function getStadium(int $stadiumId)
+    protected function getStadium(?int $stadiumId)
     {
         return $this->entityManager->getRepository(Stadium::class)->findOneBy(['id' => $stadiumId]);
     }
 
-    protected function getStadiumName(int $stadiumId)
+    protected function getStadiumName(?int $stadiumId)
     {
         $stadium = $this->entityManager->getRepository(Stadium::class)->findOneBy(['id' => $stadiumId]);
         return $stadium ? $stadium->getName() : 'Niet bepaald';
