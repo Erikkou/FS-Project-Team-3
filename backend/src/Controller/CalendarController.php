@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Calendar;
+use App\Entity\Rounds;
 use App\Entity\Stadium;
 use App\Entity\Team;
 use App\Utils\ApiClient;
@@ -39,9 +40,12 @@ class CalendarController extends AbstractController
     #[Route('/calendar', name: 'set-calendar')]
     public function calender(): JsonResponse
     {
-        $response = $this->apiClient->request('rounds/seasons/23628', ['include' => 'fixtures', 'league_id' => 72]);
+        $response = $this->apiClient->request(
+            'rounds/seasons/23628',
+            ['include' => 'fixtures.scores', 'league_id' => 72]
+        );
 
-        if (!isset($response['data'])) {
+        if (!isset($response)) {
             $this->logger->error('No data found in API response');
             return new JsonResponse([
                 'status' => 'error',
@@ -50,25 +54,46 @@ class CalendarController extends AbstractController
         }
 
         $newMatches = [];
-        foreach ($response['data'] as $fixtures) {
+        foreach ($response as $fixtures) {
             foreach ($fixtures['fixtures'] as $fixture) {
+                [$home, $away] = explode('vs', $fixture['name']);
+                $teamHome = $this->getTeamId(trim($home));
+                $teamAway = $this->getTeamId(trim($away));
+                $currentScore = array_values(
+                    array_filter(
+                        $fixture['scores'],
+                        static fn($item) => $item['type_id'] === 1525
+                    )
+                );
+
+                $homeScore = null;
+                $awayScore = null;
+                foreach ($currentScore as $scoreItem) {
+                    if ($scoreItem['score']['participant'] === 'home') {
+                        $homeScore = $scoreItem['score']['goals'];
+                    } elseif ($scoreItem['score']['participant'] === 'away') {
+                        $awayScore = $scoreItem['score']['goals'];
+                    }
+                }
+
                 // Controleer of de match al bestaat
                 $existingMatch = $this->entityManager->getRepository(Calendar::class)->find($fixture['id']);
                 if ($existingMatch) {
                     continue;
                 }
 
-                [$home, $away] = explode('vs', $fixture['name']);
                 $calendar = new Calendar();
                 $calendar->setId($fixture['id'])
-                    ->setRound($fixture['round_id'])
-                    ->setStadium($fixture['venue_id'])
-                    ->setHomeTeam($this->getTeamId(trim($home)))
-                    ->setAwayTeam($this->getTeamId(trim($away)))
+                    ->setRound($this->getRound($fixture['round_id']))
+                    ->setStadium($this->getStadium($fixture['venue_id']))
+                    ->setHomeTeam($teamHome)
+                    ->setAwayTeam($teamAway)
                     ->setStartingAt((new \DateTime($fixture['starting_at'])))
-                    ->setStatus($this->mapStatus($fixture['state_id']));
+                    ->setStatus($this->mapStatus($fixture['state_id']))
+                    ->setHomeScore($homeScore)
+                    ->setAwayScore($awayScore);
 
-                $newMatches[$fixture['round_id']][] = $fixture['id'];
+                $newMatches[$fixture['round_id']][] = [$fixture['id']];
                 $this->entityManager->persist($calendar);
             }
         }
@@ -102,10 +127,9 @@ class CalendarController extends AbstractController
         return new JsonResponse($data);
     }
 
-    protected function getTeamId(string $team): ?int
+    protected function getTeamId(string $team)
     {
-        $teamEntity = $this->entityManager->getRepository(Team::class)->findOneBy(['name' => $team]);
-        return $teamEntity ? $teamEntity->getId() : null;
+        return $this->entityManager->getRepository(Team::class)->findOneBy(['name' => $team]);
     }
 
 
@@ -113,6 +137,16 @@ class CalendarController extends AbstractController
     {
         $teamName = $this->entityManager->getRepository(Team::class)->findOneBy(['id' => $teamId]);
         return $teamName ? $teamName->getName() : 'Geen team gevonden';
+    }
+
+    protected function getRound(int $roundId)
+    {
+        return $this->entityManager->getRepository(Rounds::class)->findOneBy(['id' => $roundId]);
+    }
+
+    protected function getStadium(int $stadiumId)
+    {
+        return $this->entityManager->getRepository(Stadium::class)->findOneBy(['id' => $stadiumId]);
     }
 
     protected function getStadiumName(int $stadiumId)
@@ -125,10 +159,84 @@ class CalendarController extends AbstractController
     {
         return match ($stateId) {
             1 => 'scheduled',
-            2 => 'finished',
-            3 => 'canceled',
+            5 => 'finished',
+            12 => 'canceled',
             default => throw new \InvalidArgumentException("Unknown state_id: $stateId"),
         };
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     * @throws InvalidArgumentException
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws ClientExceptionInterface
+     */
+    #[Route('/calendar/update', name: 'update-calendar')]
+    public function updateCalendar(): JsonResponse
+    {
+        $scheduledMatches = $this->entityManager->getRepository(Calendar::class)->findBy(['status' => 'scheduled']);
+        if (empty($scheduledMatches)) {
+            return new JsonResponse([
+                'status' => 'success',
+                'message' => 'No scheduled matches to update.',
+            ]);
+        }
+
+        $updatedMatches = [];
+
+        foreach ($scheduledMatches as $match) {
+            $response = $this->apiClient->request(
+                "fixtures/{$match->getId()}",
+                ['include' => 'scores']
+            );
+
+            if (!$response) {
+                continue;
+            }
+
+            // Haal de nieuwste status op
+            $newStatus = $this->mapStatus($response['state_id'] ?? 1);
+
+            // Haal de scores op als de wedstrijd gespeeld is
+            $homeScore = null;
+            $awayScore = null;
+
+            if ($newStatus === 'finished') {
+                $currentScore = array_values(
+                    array_filter(
+                        $response['scores'],
+                        static fn($item) => $item['type_id'] === 1525
+                    )
+                );
+
+                foreach ($currentScore as $scoreItem) {
+                    if ($scoreItem['score']['participant'] === 'home') {
+                        $homeScore = $scoreItem['score']['goals'];
+                    } elseif ($scoreItem['score']['participant'] === 'away') {
+                        $awayScore = $scoreItem['score']['goals'];
+                    }
+                }
+            }
+
+            // Update alleen als er een verandering is
+            if ($newStatus !== $match->getStatus() || $homeScore !== null || $awayScore !== null) {
+                $match->setStatus($newStatus);
+                $match->setHomeScore($homeScore);
+                $match->setAwayScore($awayScore);
+
+                $this->entityManager->persist($match);
+                $updatedMatches[] = $match->getId();
+            }
+        }
+
+        $this->entityManager->flush();
+
+        return new JsonResponse([
+            'status' => 'success',
+            'updated_matches' => $updatedMatches,
+        ]);
     }
 
 }

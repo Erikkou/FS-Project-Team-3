@@ -41,7 +41,7 @@ class SetRoundsCommand extends Command
     {
         $output->writeln('Nieuwe rondes ophalen...');
 
-        $response = $this->apiClient->request('rounds', ['filters' => 'roundSeasons:23628']);
+        $response = $this->apiClient->request('rounds/seasons/23628', ['league_id' => '27']);
         sleep(1); // Wacht 1 seconde om de API niet te overbelasten
         if (empty($response)) {
             $output->writeln('Fout: API-response is leeg of ongeldig.');
