@@ -123,6 +123,8 @@ class CalendarController extends AbstractController
                 'away_team' => $this->getTeamName($match->getAwayTeam()?->getId()),
                 'date' => $match->getStartingAt()?->format('Y-m-d'),
                 'stadium' => $this->getStadiumName($match->getStadium()?->getId()),
+                'home_score' => $match->getHomeScore(),
+                'away_score' => $match->getAwayScore(),
             ];
         }
         return new JsonResponse($data);

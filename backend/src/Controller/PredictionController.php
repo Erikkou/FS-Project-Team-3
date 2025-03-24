@@ -28,8 +28,12 @@ class PredictionController extends AbstractController
     }
 
     #[Route('/api/predictions', methods: ['POST'])]
-    public function createPrediction(Request $request, EntityManagerInterface $em, CalendarRepository $calendarRepository): JsonResponse
-    {
+    public function createOrUpdatePredictions(
+        Request $request,
+        EntityManagerInterface $em,
+        CalendarRepository $calendarRepository,
+        PredictionRepository $predictionRepository
+    ): JsonResponse {
         $data = json_decode($request->getContent(), true);
 
         /** @var User $user */
@@ -38,23 +42,43 @@ class PredictionController extends AbstractController
             return $this->json(['error' => 'User not authenticated'], 401);
         }
 
-        $calendar = $calendarRepository->find($data['calendar_id']);
-        if (!$calendar) {
-            return $this->json(['error' => 'Calendar not found'], 404);
+        if (!is_array($data)) {
+            return $this->json(['error' => 'Invalid data format'], 400);
         }
 
-        $prediction = new Prediction();
-        $prediction->setUser($user);
-        $prediction->setMatch($calendar);
-        $prediction->setHomeTeamScore($data['home_team_score']);
-        $prediction->setAwayTeamScore($data['away_team_score']);
-        $prediction->setCreatedAt(new \DateTimeImmutable());
+        foreach ($data as $predictionData) {
+            $calendar = $calendarRepository->find($predictionData['calendar_id']);
+            if (!$calendar) {
+                return $this->json(['error' => "Calendar ID {$predictionData['calendar_id']} not found"], 404);
+            }
 
-        $em->persist($prediction);
+            // Check if the prediction already exists for the user
+            $existingPrediction = $predictionRepository->findOneBy([
+                'user' => $user,
+                'match' => $calendar
+            ]);
+
+            if ($existingPrediction) {
+                $existingPrediction->setHomeTeamScore($predictionData['home_team_score']);
+                $existingPrediction->setAwayTeamScore($predictionData['away_team_score']);
+                $em->persist($existingPrediction);
+            } else {
+                $prediction = new Prediction();
+                $prediction->setUser($user);
+                $prediction->setMatch($calendar);
+                $prediction->setHomeTeamScore($predictionData['home_team_score']);
+                $prediction->setAwayTeamScore($predictionData['away_team_score']);
+                $prediction->setCreatedAt(new \DateTimeImmutable());
+
+                $em->persist($prediction);
+            }
+        }
+
         $em->flush();
 
-        return $this->json(['message' => 'Prediction saved'], 201);
+        return $this->json(['message' => 'All predictions saved'], 201);
     }
+
 
     #[Route('/{id}', methods: ['GET'])]
     public function getPrediction(PredictionRepository $repository, int $id): JsonResponse

@@ -106,7 +106,7 @@ const GamesOverview = () => {
                                             className="bg-gray-800 p-4 rounded-lg shadow-lg"
                                         >
                                             <h4 className="text-white text-center">
-                                                {fixture.home_team} vs {fixture.away_team}
+                                                {fixture.home_team} {fixture.home_score} vs {fixture.away_team} {fixture.away_score}
                                             </h4>
                                             <p className="text-white text-center">
                                                 {new Date(fixture.date).toLocaleDateString()}

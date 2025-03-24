@@ -2,37 +2,46 @@ import React, {useEffect, useState} from "react";
 import Api from "../Api";
 
 const PredictResult = () => {
-    // State to store the list of matches
+    const [currentRound, setCurrentRound] = useState([]);
     const [matches, setMatches] = useState([]);
-
-    // State to store user predictions
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [predictions, setPredictions] = useState({});
 
-    // State for handling the loading indicator
-    const [loading, setLoading] = useState(true);
-
-    // Fetch matches from the database/API
     useEffect(() => {
-        // -------------Replace with API call to fetch matches--------------------
-        const fetchMatches = async () => {
+        const fetchCurrentRound = async () => {
             try {
-                setLoading(true);
-                // Simulated API response
-                const response = [
-                    {id: 1, teamA: "Team A", teamB: "Team B", date: "2025-01-25"},
-                    {id: 2, teamA: "Team C", teamB: "Team D", date: "2025-01-26"},
-                    {id: 3, teamA: "Team E", teamB: "Team F", date: "2025-01-27"},
-                ];
-                setMatches(response); // Store matches in state
+                const response = await Api.get(`/api/show/rounds/week`);
+                console.log("Fetched current round data:", response.data); // Log de ontvangen data
+                setCurrentRound(response.data.id); // Start with the current round ID
             } catch (error) {
-                console.error("Error fetching matches:", error);
-            } finally {
-                setLoading(false); // Stop loading indicator
+                setError("Failed to find the current round.");
+                console.error("Error fetching current round:", error);
             }
         };
-
-        fetchMatches();
+        fetchCurrentRound();
     }, []);
+
+    // Fetch round details when currentRound changes
+    useEffect(() => {
+        console.log("Current Round:", currentRound); // Log de currentRound state
+        if (currentRound !== null) {
+            const fetchRound = async () => {
+                setLoading(true);
+                try {
+                    const fixturesResponse = await Api.get(`/calendar/round/${currentRound}`);
+                    console.log("Fetched matches data:", fixturesResponse.data);
+                    setMatches(fixturesResponse.data);
+                } catch (error) {
+                    setError("Failed to load matches data.");
+                    console.error("Error fetching matches data:", error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            fetchRound();
+        }
+    }, [currentRound]); // Fetch round when currentRound changes
 
     // Handle user input for predictions
     const handlePredictionChange = (matchId, team, value) => {
@@ -45,22 +54,35 @@ const PredictResult = () => {
         });
     };
 
-    // Submit predictions to the API/database
     const submitPredictions = async () => {
+
+        // Controleer of alle voorspellingen zijn ingevuld
+        const incompletePredictions = Object.keys(predictions).some((matchId) => {
+            return (
+                predictions[matchId]?.teamA === undefined || predictions[matchId]?.teamA === "" ||
+                predictions[matchId]?.teamB === undefined || predictions[matchId]?.teamB === ""
+            );
+        });
+
+        if (incompletePredictions) {
+            alert("Vul alle voorspellingen in voordat je ze indient!");
+            return;
+        }
+
         try {
             const predictionsArray = Object.keys(predictions).map((matchId) => ({
                 calendar_id: matchId,
-                home_team_score: parseInt(predictions[matchId]?.teamA || 0, 10),
-                away_team_score: parseInt(predictions[matchId]?.teamB || 0, 10),
+                home_team_score: parseInt(predictions[matchId]?.teamA, 10),
+                away_team_score: parseInt(predictions[matchId]?.teamB, 10),
             }));
 
             const response = await Api.post("/api/predictions", predictionsArray);
 
-            alert("Predictions saved successfully!");
+            alert("Alle voorspellingen zijn succesvol opgeslagen!");
             console.log("Server Response:", response.data);
         } catch (error) {
-            console.error("Error submitting predictions:", error);
-            alert("Error submitting predictions.");
+            console.error("Fout bij het indienen van voorspellingen:", error);
+            alert("Er is een fout opgetreden bij het indienen van de voorspellingen.");
         }
     };
 
@@ -89,57 +111,66 @@ const PredictResult = () => {
                             </tr>
                             </thead>
                             <tbody>
-                            {matches.map((match) => (
-                                <tr key={match.id} className="hover:bg-gray-600">
-                                    <td className="py-2">
-                                        {match.teamA} vs {match.teamB}
-                                    </td>
-                                    <td className="py-2">{match.date}</td>
-                                    <td className="py-2">
-                                        {/* Prediction input for Team A */}
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            value={predictions[match.id]?.teamA || ""}
-                                            onChange={(e) =>
-                                                handlePredictionChange(match.id, "teamA", e.target.value)
-                                            }
-                                            placeholder="Team A"
-                                            className="w-16 p-1 rounded bg-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                                        />
-                                        <span className="mx-2">-</span>
-                                        {/* Prediction input for Team B */}
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            value={predictions[match.id]?.teamB || ""}
-                                            onChange={(e) =>
-                                                handlePredictionChange(match.id, "teamB", e.target.value)
-                                            }
-                                            placeholder="Team B"
-                                            className="w-16 p-1 rounded bg-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                                        />
-                                    </td>
-                                </tr>
-                            ))}
+                            {matches[currentRound]?.map((match) => {
+                                const matchDate = new Date(match.date);
+                                const isPast = matchDate < new Date(); // Controleer of de wedstrijddatum in het verleden ligt
+                                return (
+                                    <tr key={match.id} className="hover:bg-gray-600">
+                                        <td className="py-2">
+                                            {match.home_team} vs {match.away_team}
+                                        </td>
+                                        <td className="py-2">{matchDate.toLocaleDateString()}</td>
+                                        <td className="py-2">
+                                            {/* Als de wedstrijddatum in het verleden ligt, zet de invoervelden op "disabled" */}
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                value={predictions[match.id]?.teamA || ""}
+                                                onChange={(e) =>
+                                                    handlePredictionChange(match.id, "teamA", e.target.value)
+                                                }
+                                                placeholder="Team A"
+                                                disabled={isPast}
+                                                className={`w-16 p-1 rounded bg-gray-600 text-white focus:outline-none focus:ring-2 ${
+                                                    predictions[match.id]?.teamA === "" ? "border-red-500 border-2" : "focus:ring-yellow-500"
+                                                } ${isPast ? "bg-gray-500 cursor-not-allowed" : ""}`}
+                                            />
+                                            <span className="mx-2">-</span>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                value={predictions[match.id]?.teamB || ""}
+                                                onChange={(e) =>
+                                                    handlePredictionChange(match.id, "teamB", e.target.value)
+                                                }
+                                                placeholder="Team B"
+                                                disabled={isPast}
+                                                className={`w-16 p-1 rounded bg-gray-600 text-white focus:outline-none focus:ring-2 ${
+                                                    predictions[match.id]?.teamB === "" ? "border-red-500 border-2" : "focus:ring-yellow-500"
+                                                } ${isPast ? "bg-gray-500 cursor-not-allowed" : ""}`}
+                                            />
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                             </tbody>
+
                         </table>
                     )}
 
                     {/* Submit button */}
-                    {matches.length > 0 && (
-                        <div className="mt-6 text-right">
-                            <button
-                                onClick={submitPredictions}
-                                className="px-6 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-400"
-                            >
-                                Submit Predictions
-                            </button>
-                        </div>
-                    )}
+                    <div className="mt-6 text-right">
+                        <button
+                            onClick={submitPredictions}
+                            className="px-6 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-400"
+                        >
+                            Submit Predictions
+                        </button>
+                    </div>
                 </div>
             )}
         </div>
+
     );
 };
 
