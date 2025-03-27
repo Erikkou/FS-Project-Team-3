@@ -40,7 +40,10 @@ class ImportFixturesCommand extends Command
             $output->writeln("🔍 API-aanroep: fixtures voor ronde ID $roundId");
 
             try {
-                $response = $this->apiClient->request("rounds/$roundId", ['include' => 'fixtures']);
+                $response = $this->apiClient->request(
+                    'rounds/seasons/23628',
+                    ['include' => 'fixtures.scores', 'league_id' => 72]
+                );
                 sleep(1); // Voorkom rate-limiting
 
                 if (!array_key_exists('fixtures', $response) || !is_array($response['fixtures'])) {
@@ -95,7 +98,7 @@ class ImportFixturesCommand extends Command
                         ->setStadium($stadium)
                         ->setRound($round)
                         ->setStartingAt(new \DateTime($match['starting_at']))
-                        ->setStatus($this->getMatchStatus($match['state_id'] ?? 0))
+                        ->setStatus($this->mapStatus($match['state_id'] ?? 0))
                         ->setHomeScore($homeScore)
                         ->setAwayScore($awayScore);
 
@@ -118,15 +121,13 @@ class ImportFixturesCommand extends Command
     }
 
 
-    private function getMatchStatus(int $stateId): string
+    private function mapStatus(int $stateId): string
     {
         return match ($stateId) {
             1 => 'scheduled',
-            2 => 'in_progress',
-            3 => 'postponed',
-            4 => 'canceled',
             5 => 'finished',
-            default => 'unknown',
+            12 => 'canceled',
+            default => throw new \InvalidArgumentException("Unknown state_id: $stateId"),
         };
     }
 }

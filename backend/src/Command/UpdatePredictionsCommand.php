@@ -3,6 +3,7 @@
 namespace App\Command;
 
 use App\Repository\PredictionRepository;
+use App\Service\PredictionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -17,7 +18,8 @@ class UpdatePredictionsCommand extends Command
 {
     public function __construct(
         private readonly EntityManagerInterface $em,
-        private readonly PredictionRepository   $predictionRepository
+        private readonly PredictionRepository   $predictionRepository,
+        private readonly PredictionService      $predictionService
     )
     {
         parent::__construct();
@@ -27,13 +29,12 @@ class UpdatePredictionsCommand extends Command
     {
         $output->writeln('Bezig met bijwerken van voorspellingen...');
 
-        // Haal alle voorspellingen op die nog niet verwerkt zijn
         $predictions = $this->predictionRepository->findAllPendingPredictions();
 
         foreach ($predictions as $prediction) {
             $match = $prediction->getMatch();
+            $prediction->setStatus($match->getStatus());
 
-            // Controleer of de wedstrijd echt is afgelopen
             if ($match->getStatus() !== 'finished' || $match->getHomeScore() === null || $match->getAwayScore() === null) {
                 continue;
             }
@@ -42,23 +43,22 @@ class UpdatePredictionsCommand extends Command
             $homeScore = $match->getHomeScore();
             $awayScore = $match->getAwayScore();
 
-            // Bereken punten
-            $oldPoints = $prediction->getPoints() ?? 0; // Voorkom fouten als het null is
-            $prediction->calculatePoints($homeScore, $awayScore);
-            $newPoints = $prediction->getPoints();
+            // Bereken de punten met de service
+            $oldPoints = $prediction->getPoints() ?? 0;
+            $newPoints = $this->predictionService->calculatePoints($prediction, $homeScore, $awayScore);
+            $prediction->setPoints($newPoints);
 
             // Update gebruiker score
             $user = $prediction->getUser();
             $user->setScores(max(0, $user->getScores() - $oldPoints + $newPoints));
 
-            // Opslaan in database
             $this->em->persist($prediction);
             $this->em->persist($user);
         }
 
         $this->em->flush();
-
         $output->writeln('Voorspellingen en scores bijgewerkt!');
+
         return Command::SUCCESS;
     }
 

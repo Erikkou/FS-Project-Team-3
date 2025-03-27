@@ -6,7 +6,7 @@ use App\Entity\Prediction;
 use App\Entity\User;
 use App\Repository\CalendarRepository;
 use App\Repository\PredictionRepository;
-use App\Utils\ApiClient;
+use App\Service\PredictionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -20,20 +20,21 @@ use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
 class PredictionController extends AbstractController
 {
-    private ApiClient $apiClient;
+    private PredictionService $predictionService;
 
-    public function __construct(ApiClient $apiClient)
+    public function __construct(PredictionService $predictionService)
     {
-        $this->apiClient = $apiClient;
+        $this->predictionService = $predictionService;
     }
 
     #[Route('/api/predictions', methods: ['POST'])]
     public function createOrUpdatePredictions(
-        Request $request,
+        Request                $request,
         EntityManagerInterface $em,
-        CalendarRepository $calendarRepository,
-        PredictionRepository $predictionRepository
-    ): JsonResponse {
+        CalendarRepository     $calendarRepository,
+        PredictionRepository   $predictionRepository
+    ): JsonResponse
+    {
         $data = json_decode($request->getContent(), true);
 
         /** @var User $user */
@@ -51,6 +52,7 @@ class PredictionController extends AbstractController
             if (!$calendar) {
                 return $this->json(['error' => "Calendar ID {$predictionData['calendar_id']} not found"], 404);
             }
+            $status = $calendar->getStatus();
 
             // Check if the prediction already exists for the user
             $existingPrediction = $predictionRepository->findOneBy([
@@ -61,6 +63,7 @@ class PredictionController extends AbstractController
             if ($existingPrediction) {
                 $existingPrediction->setHomeTeamScore($predictionData['home_team_score']);
                 $existingPrediction->setAwayTeamScore($predictionData['away_team_score']);
+                $existingPrediction->setStatus($status);
                 $em->persist($existingPrediction);
             } else {
                 $prediction = new Prediction();
@@ -69,6 +72,7 @@ class PredictionController extends AbstractController
                 $prediction->setHomeTeamScore($predictionData['home_team_score']);
                 $prediction->setAwayTeamScore($predictionData['away_team_score']);
                 $prediction->setCreatedAt(new \DateTimeImmutable());
+                $prediction->setStatus($status);
 
                 $em->persist($prediction);
             }
@@ -76,7 +80,7 @@ class PredictionController extends AbstractController
 
         $em->flush();
 
-        return $this->json(['message' => 'All predictions saved'], 201);
+        return $this->json(['message' => 'All predictions saved', 'match_status' => $status], 201);
     }
 
 
@@ -103,25 +107,31 @@ class PredictionController extends AbstractController
         $predictions = $repository->findAllPendingPredictions();
 
         foreach ($predictions as $prediction) {
-            $matchData = $this->apiClient->request("fixtures/{$prediction->getFixture()->getId()}");
-
-            if (!empty($matchData['data'])) {
-                $matchResult = $matchData['data'];
-
-                $oldPoints = $prediction->getPoints();
-                $prediction->calculatePoints($matchResult['home_score'], $matchResult['away_score']);
-                $newPoints = $prediction->getPoints();
-
-                // Update gebruiker score
-                $user = $prediction->getUser();
-                $user->setScores($user->getScores() - $oldPoints + $newPoints);
-
-                $em->persist($prediction);
-                $em->persist($user);
+            $match = $prediction->getMatch();
+            $prediction->setStatus($match->getStatus());
+            // Zorg dat de wedstrijd is afgerond en een score heeft
+            if ($match->getStatus() !== 'finished' || $match->getHomeScore() === null || $match->getAwayScore() === null) {
+                continue;
             }
+
+            $homeScore = $match->getHomeScore();
+            $awayScore = $match->getAwayScore();
+
+            // Bereken nieuwe punten
+            $oldPoints = $prediction->getPoints() ?? 0;
+            $newPoints = $this->predictionService->calculatePoints($prediction, $homeScore, $awayScore);
+            $prediction->setPoints($newPoints);
+
+            // Update gebruiker score
+            $user = $prediction->getUser();
+            $user->setScores(max(0, $user->getScores() - $oldPoints + $newPoints));
+
+            $em->persist($prediction);
+            $em->persist($user);
         }
 
         $em->flush();
+
         return $this->json(['message' => 'Predictions and user scores updated']);
     }
 

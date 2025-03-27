@@ -55,17 +55,17 @@ class PredictionRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
-
-    public function findAllPendingPredictions()
+    public function findAllPendingPredictions(): array
     {
         return $this->createQueryBuilder('p')
-            ->join('p.match', 'm')
+            ->innerJoin('p.match', 'm')
             ->where('m.status = :finished')
-            ->andWhere('p.points IS NULL') // Zorgt ervoor dat alleen niet-verwerkte voorspellingen worden opgehaald
+            ->andWhere('p.points IS NULL OR p.points = 0')
             ->setParameter('finished', 'finished')
             ->getQuery()
             ->getResult();
     }
+
 
 
 }

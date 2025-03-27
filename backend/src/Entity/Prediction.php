@@ -81,6 +81,16 @@ class Prediction
         return $this;
     }
 
+    public function getHomeTeamScore(): int
+    {
+        return $this->homeTeamScore;
+    }
+
+    public function getAwayTeamScore(): int
+    {
+        return $this->awayTeamScore;
+    }
+
     public function setAwayTeamScore(int $awayTeamScore): void
     {
         $this->awayTeamScore = $awayTeamScore;
@@ -91,6 +101,16 @@ class Prediction
         $this->homeTeamScore = $homeTeamScore;
     }
 
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): void
+    {
+        $this->status = $status;
+    }
+
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->createdAt;
@@ -99,25 +119,6 @@ class Prediction
     public function setCreatedAt(?\DateTimeInterface $createdAt): void
     {
         $this->createdAt = $createdAt;
-    }
-
-    public function calculatePoints(int $actualHomeScore, int $actualAwayScore): void
-    {
-        if ($this->homeTeamScore === $actualHomeScore && $this->awayTeamScore === $actualAwayScore) {
-            $this->points = 9; // Exacte score goed
-        } elseif (
-            ($this->homeTeamScore > $this->awayTeamScore && $actualHomeScore > $actualAwayScore) ||
-            ($this->homeTeamScore < $this->awayTeamScore && $actualHomeScore < $actualAwayScore)
-        ) {
-            // Juiste winnaar, controleren of het doelsaldo ook klopt
-            if (($this->homeTeamScore - $this->awayTeamScore) === ($actualHomeScore - $actualAwayScore)) {
-                $this->points = 6; // Juiste winnaar, correcte doelsaldo, maar verkeerde score
-            } else {
-                $this->points = 3; // Juiste winnaar, maar volledig verkeerde score
-            }
-        } else {
-            $this->points = 0; // Helemaal fout
-        }
     }
 
 }

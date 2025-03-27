@@ -84,7 +84,7 @@ Controleer de rechten van je projectdirectory (op je hostmachine) en zorg ervoor
 
 sudo chmod -R 777 .
 
-### Data base commando's
+### Database commando's
 ```bash
 php bin/console doctrine:database:drop --force
 ```
@@ -113,7 +113,7 @@ php bin/console doctrine:migrations:diff
 
 Database opslaan in een bestand
 ```bash
-docker exec -i mariadb mariadb-dump -u myuser -p mydatabase > database/init/database_dump.sql
+docker exec -i mariadb mariadb-dump -u myuser -pmypassword mydatabase > database/init/database_dump.sql
 ```
 
 Database importeren vanuit een bestand
