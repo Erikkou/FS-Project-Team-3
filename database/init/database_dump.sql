@@ -1173,7 +1173,7 @@ CREATE TABLE `prediction` (
   KEY `IDX_36396FC82ABEACD6` (`match_id`),
   CONSTRAINT `FK_36396FC82ABEACD6` FOREIGN KEY (`match_id`) REFERENCES `calendar` (`id`),
   CONSTRAINT `FK_36396FC8A76ED395` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1186,7 +1186,15 @@ INSERT INTO `prediction` VALUES
 (3,1,19136748,2,3,0,'2025-03-26 20:46:24','scheduled'),
 (4,1,19136750,1,0,0,'2025-03-26 21:38:28','scheduled'),
 (5,1,19136751,2,0,0,'2025-03-26 21:38:28','scheduled'),
-(6,1,19136752,3,2,0,'2025-03-26 21:38:28','scheduled');
+(6,1,19136752,3,2,0,'2025-03-26 21:38:28','scheduled'),
+(7,2,19136748,1,1,0,'2025-03-27 03:18:55','scheduled'),
+(8,2,19136750,1,2,0,'2025-03-27 03:18:55','scheduled'),
+(9,2,19136751,3,1,0,'2025-03-27 03:18:55','scheduled'),
+(10,3,19136746,1,1,0,'2025-03-27 03:22:37','scheduled'),
+(11,3,19136747,2,0,0,'2025-03-27 03:22:37','scheduled'),
+(12,3,19136749,0,2,0,'2025-03-27 03:22:37','scheduled'),
+(13,3,19136753,1,2,0,'2025-03-27 03:22:37','scheduled'),
+(14,3,19136754,2,1,0,'2025-03-27 03:22:37','scheduled');
 /*!40000 ALTER TABLE `prediction` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1304,10 +1312,10 @@ DROP TABLE IF EXISTS `team`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `team` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2346 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1362,7 +1370,7 @@ CREATE TABLE `user` (
   `scores` int(11) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `UNIQ_8D93D649E7927C74` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1373,7 +1381,8 @@ LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
 INSERT INTO `user` VALUES
 (1,'Nver','nver.am@live.nl','$2y$13$zitxK3H2.LeYywgaT7BweOu7tjewvFfYjbrmWC8IWlk3Iu2U9ejgO','[\"ROLE_USER\"]',NULL,20),
-(2,'testuser','aa@bb.cc','$2y$13$f.YuQqlsHQkeMnWarcLTjO9zG2smd9J0ZcgYjwT5WHaAWHdljyAqm','[\"ROLE_USER\"]',NULL,0);
+(2,'testuser','aa@bb.cc','$2y$13$f.YuQqlsHQkeMnWarcLTjO9zG2smd9J0ZcgYjwT5WHaAWHdljyAqm','[\"ROLE_USER\"]',NULL,0),
+(3,'Alfred','aaaa@kkk','$2y$13$Vj4OxXZwDljGwBb5s8ivmuBWeoE55AXoUCv3MaPv8Svd9CsCgJKom','[\"ROLE_USER\"]',NULL,0);
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -1386,4 +1395,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2025-03-26 23:00:12
+-- Dump completed on 2025-03-27  2:27:14
