@@ -79,6 +79,8 @@ class PredictionServiceTest extends TestCase
     }
 
     /**
+     * @param int $home
+     * @param int $away
      * @return Prediction
      */
     public function maakPrediction(int $home, int $away): Prediction
