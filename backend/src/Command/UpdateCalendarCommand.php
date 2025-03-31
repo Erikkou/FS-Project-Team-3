@@ -13,11 +13,11 @@ use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
-class FillCalendarCommand extends Command
+class UpdateCalendarCommand extends Command
 {
     protected static $defaultName = 'app:fill-calendar';
 
-    private $calendarController;
+    private CalendarController $calendarController;
 
     public function __construct(CalendarController $calendarController)
     {

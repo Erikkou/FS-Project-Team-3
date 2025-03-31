@@ -44,7 +44,7 @@ class ImportFixturesCommand extends Command
                     'rounds/seasons/23628',
                     ['include' => 'fixtures.scores', 'league_id' => 72]
                 );
-                sleep(1); // Voorkom rate-limiting
+                sleep(1);
 
                 if (!array_key_exists('fixtures', $response) || !is_array($response['fixtures'])) {
                     $output->writeln("Geen geldige 'fixtures' gevonden in API-response.");
