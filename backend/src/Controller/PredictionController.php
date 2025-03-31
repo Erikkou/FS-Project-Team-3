@@ -83,6 +83,32 @@ class PredictionController extends AbstractController
         return $this->json(['message' => 'All predictions saved', 'match_status' => $status], 201);
     }
 
+    #[Route('/api/user/predictions', methods: ['GET'])]
+    public function getUserPredictions(PredictionRepository $repository): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['error' => 'User not authenticated'], 401);
+        }
+
+        $predictions = $repository->findBy(['user' => $user]);
+
+        $data = array_map(function (Prediction $prediction) {
+            return [
+                'match' => [
+                    'id' => $prediction->getMatch()->getId(),
+                    'home_team' => $prediction->getMatch()->getHomeTeam()->getName(),
+                    'away_team' => $prediction->getMatch()->getAwayTeam()->getName(),
+                ],
+                'home_team_score' => $prediction->getHomeTeamScore(),
+                'away_team_score' => $prediction->getAwayTeamScore(),
+                'points' => $prediction->getPoints(),
+            ];
+        }, $predictions);
+
+        return $this->json($data);
+    }
+
 
     #[Route('/{id}', methods: ['GET'])]
     public function getPrediction(PredictionRepository $repository, int $id): JsonResponse
