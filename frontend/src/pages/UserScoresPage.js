@@ -77,6 +77,7 @@ const UserScoresPage = () => {
                             <tr>
                                 <th className="border-b border-gray-500 py-2">Wedstrijd</th>
                                 <th className="border-b border-gray-500 py-2">Voorspelling</th>
+                                <th className="border-b border-gray-500 py-2">Eindstand</th>
                                 <th className="border-b border-gray-500 py-2">Scores</th>
                             </tr>
                             </thead>
@@ -89,6 +90,12 @@ const UserScoresPage = () => {
                                     <td className="py-2">
                                         {prediction.home_team_score} - {prediction.away_team_score}
                                     </td>
+                                    <td className="py-2">
+                                        {prediction.match.status === 'finished'
+                                            ? `${prediction.match.home_score} - ${prediction.match.away_score}`
+                                            : 'Nog niet gespeeld'}
+                                    </td>
+
                                     <td className="py-2">
                                         {prediction.points}
                                     </td>

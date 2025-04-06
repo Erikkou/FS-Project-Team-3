@@ -14,12 +14,12 @@ class Calendar
     #[ORM\Column]
     private ?int $id = null;
 
-    #[Groups(["match:read"])]
+    #[Groups(["prediction:read"])]
     #[ORM\ManyToOne(targetEntity: Team::class)]
     #[ORM\JoinColumn(name: "home_team", referencedColumnName: "id", nullable: false)]
     private ?Team $homeTeam = null;
 
-    #[Groups(["match:read"])]
+    #[Groups(["prediction:read"])]
     #[ORM\ManyToOne(targetEntity: Team::class)]
     #[ORM\JoinColumn(name: "away_team", referencedColumnName: "id", nullable: false)]
     private ?Team $awayTeam = null;
@@ -38,9 +38,11 @@ class Calendar
     #[ORM\Column(type: 'string', length: 50)]
     private string $status = 'scheduled'; // Mogelijke waarden: 'scheduled', 'finished', 'canceled'
 
+    #[Groups(['prediction:read'])]
     #[ORM\Column(type: 'integer', nullable: true)]
     private ?int $homeScore = null;
 
+    #[Groups(['prediction:read'])]
     #[ORM\Column(type: 'integer', nullable: true)]
     private ?int $awayScore = null;
 
