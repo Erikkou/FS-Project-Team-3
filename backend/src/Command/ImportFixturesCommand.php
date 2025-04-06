@@ -27,9 +27,6 @@ class ImportFixturesCommand extends Command
         parent::__construct();
     }
 
-    /**
-     * @throws \Exception
-     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $output->writeln('⚽ Wedstrijden importeren...');
@@ -46,80 +43,100 @@ class ImportFixturesCommand extends Command
                 );
                 sleep(1);
 
-                if (!array_key_exists('fixtures', $response) || !is_array($response['fixtures'])) {
+                if (!isset($response['fixtures']) || !is_array($response['fixtures'])) {
                     $output->writeln("Geen geldige 'fixtures' gevonden in API-response.");
-                    dump($response);
                     continue;
                 }
 
                 $savedMatches = 0;
 
-                foreach ($response['fixtures'] as $match) {
-                    dump($match);
-
-                    if (!isset($match['id'], $match['name'], $match['venue_id'], $match['starting_at'])) {
-                        $output->writeln("Ongeldige wedstrijddata voor ID " . ($match['id'] ?? 'ONBEKEND') . ", overslaan.");
+                foreach ($response['fixtures'] as $fixture) {
+                    if (!isset($fixture['id'], $fixture['name'], $fixture['venue_id'], $fixture['starting_at'])) {
+                        $output->writeln("Ongeldige wedstrijddata voor ID " . ($fixture['id'] ?? 'ONBEKEND') . ", overslaan.");
                         continue;
                     }
 
-                    if (!str_contains($match['name'], " vs ")) {
-                        $output->writeln("Ongeldige wedstrijdnaam: '{$match['name']}', overslaan.");
+                    if (!str_contains($fixture['name'], 'vs')) {
+                        $output->writeln("Ongeldige wedstrijdnaam: '{$fixture['name']}', overslaan.");
                         continue;
                     }
 
-                    [$homeTeamName, $awayTeamName] = explode(" vs ", $match['name']);
+                    [$home, $away] = explode('vs', $fixture['name']);
+                    $teamHome = $this->getTeamByName(trim($home));
+                    $teamAway = $this->getTeamByName(trim($away));
+                    $stadium = $this->getStadium($fixture['venue_id'] ?? null);
 
-                    $homeScore = $awayScore = null;
-                    if (!empty($match['result_info'])) {
-                        preg_match('/(\d+)-(\d+)/', $match['result_info'], $score);
-                        $homeScore = isset($score[1]) ? (int)$score[1] : null;
-                        $awayScore = isset($score[2]) ? (int)$score[2] : null;
+                    if (!$teamHome || !$teamAway || !$stadium) {
+                        $output->writeln("Teams of stadion niet gevonden voor fixture {$fixture['id']}, overslaan.");
+                        continue;
                     }
 
-                    $existingMatch = $this->entityManager->getRepository(Calendar::class)->find($match['id']);
+                    $homeScore = null;
+                    $awayScore = null;
+
+                    if (isset($fixture['scores']) && is_array($fixture['scores'])) {
+                        foreach ($fixture['scores'] as $scoreItem) {
+                            if (($scoreItem['type_id'] ?? null) === 1525) {
+                                if ($scoreItem['score']['participant'] === 'home') {
+                                    $homeScore = $scoreItem['score']['goals'] ?? null;
+                                } elseif ($scoreItem['score']['participant'] === 'away') {
+                                    $awayScore = $scoreItem['score']['goals'] ?? null;
+                                }
+                            }
+                        }
+                    }
+
+                    $existingMatch = $this->entityManager->getRepository(Calendar::class)->find($fixture['id']);
+
                     if ($existingMatch) {
-                        $output->writeln("Wedstrijd {$match['id']} bestaat al, overslaan.");
+                        $output->writeln("Match {$fixture['id']} bestaat al – bijwerken...");
+
+                        $existingMatch
+                            ->setStatus($this->mapStatus($fixture['state_id'] ?? 0))
+                            ->setHomeScore($homeScore)
+                            ->setAwayScore($awayScore);
+
+                        $this->entityManager->persist($existingMatch);
+                        $savedMatches++;
                         continue;
                     }
 
-                    $homeTeam = $this->entityManager->getRepository(Team::class)->findOneBy(['name' => $homeTeamName]);
-                    $awayTeam = $this->entityManager->getRepository(Team::class)->findOneBy(['name' => $awayTeamName]);
-                    $stadium = $this->entityManager->getRepository(Stadium::class)->find($match['venue_id']);
-
-                    if (!$homeTeam || !$awayTeam || !$stadium) {
-                        $output->writeln("Team of stadion niet gevonden voor wedstrijd {$match['id']}, overslaan.");
-                        continue;
-                    }
-
-                    $newFixture = new Calendar();
-                    $newFixture->setId($match['id'])
-                        ->setHomeTeam($homeTeam)
-                        ->setAwayTeam($awayTeam)
+                    $calendar = new Calendar();
+                    $calendar->setId($fixture['id'])
+                        ->setHomeTeam($teamHome)
+                        ->setAwayTeam($teamAway)
                         ->setStadium($stadium)
                         ->setRound($round)
-                        ->setStartingAt(new \DateTime($match['starting_at']))
-                        ->setStatus($this->mapStatus($match['state_id'] ?? 0))
+                        ->setStartingAt(new \DateTime($fixture['starting_at']))
+                        ->setStatus($this->mapStatus($fixture['state_id'] ?? 0))
                         ->setHomeScore($homeScore)
                         ->setAwayScore($awayScore);
 
-                    $this->entityManager->persist($newFixture);
+                    $this->entityManager->persist($calendar);
                     $savedMatches++;
                 }
 
-                if ($savedMatches > 0) {
-                    $this->entityManager->flush();
-                    $output->writeln("$savedMatches nieuwe wedstrijden opgeslagen.");
-                }
+                $this->entityManager->flush();
+                $output->writeln("$savedMatches wedstrijden toegevoegd of bijgewerkt.");
+
             } catch (\Exception $e) {
-                $output->writeln("Fout: " . $e->getMessage());
-                dump($e);
+                $output->writeln("Fout tijdens import: " . $e->getMessage());
             }
         }
 
-        $output->writeln('Import afgerond.');
+        $output->writeln('🏁 Import afgerond.');
         return Command::SUCCESS;
     }
 
+    private function getTeamByName(string $name): ?Team
+    {
+        return $this->entityManager->getRepository(Team::class)->findOneBy(['name' => $name]);
+    }
+
+    private function getStadium(?int $id): ?Stadium
+    {
+        return $id ? $this->entityManager->getRepository(Stadium::class)->find($id) : null;
+    }
 
     private function mapStatus(int $stateId): string
     {
@@ -127,7 +144,7 @@ class ImportFixturesCommand extends Command
             1 => 'scheduled',
             5 => 'finished',
             12 => 'canceled',
-            default => throw new \InvalidArgumentException("Unknown state_id: $stateId"),
+            default => throw new \InvalidArgumentException("Onbekende state_id: $stateId"),
         };
     }
 }

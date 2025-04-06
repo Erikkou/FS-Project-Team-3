@@ -22,10 +22,11 @@ use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 class CalendarController extends AbstractController
 {
     public function __construct(
-        private readonly ApiClient $apiClient,
+        private readonly ApiClient              $apiClient,
         private readonly EntityManagerInterface $entityManager,
-        private readonly LoggerInterface $logger
-    ) {
+        private readonly LoggerInterface        $logger
+    )
+    {
     }
 
     /**
@@ -76,25 +77,37 @@ class CalendarController extends AbstractController
                     }
                 }
 
-                // Controleer of de match al bestaat
                 $existingMatch = $this->entityManager->getRepository(Calendar::class)->find($fixture['id']);
+
                 if ($existingMatch) {
-                    continue;
+                    $existingMatch
+                        ->setStatus($this->mapStatus($fixture['state_id'] ?? 0))
+                        ->setHomeScore($homeScore)
+                        ->setAwayScore($awayScore);
+
+                    $this->entityManager->persist($existingMatch);
+                } else {
+                    $round = $this->getRound($fixture['round_id'] ?? null);
+                    $stadium = $this->getStadium($fixture['venue_id'] ?? null);
+
+                    if (!$round || !$stadium) {
+                        $this->logger->warning('Round of stadion niet gevonden', ['fixture' => $fixture]);
+                        continue;
+                    }
+
+                    $calendar = new Calendar();
+                    $calendar->setId($fixture['id'])
+                        ->setRound($round)
+                        ->setStadium($stadium)
+                        ->setHomeTeam($teamHome)
+                        ->setAwayTeam($teamAway)
+                        ->setStartingAt(new \DateTime($fixture['starting_at']))
+                        ->setStatus($this->mapStatus($fixture['state_id'] ?? 0))
+                        ->setHomeScore($homeScore)
+                        ->setAwayScore($awayScore);
+
+                    $this->entityManager->persist($calendar);
                 }
-
-                $calendar = new Calendar();
-                $calendar->setId($fixture['id'])
-                    ->setRound($this->getRound($fixture['round_id']))
-                    ->setStadium($this->getStadium($fixture['venue_id']))
-                    ->setHomeTeam($teamHome)
-                    ->setAwayTeam($teamAway)
-                    ->setStartingAt((new \DateTime($fixture['starting_at'])))
-                    ->setStatus($this->mapStatus($fixture['state_id']))
-                    ->setHomeScore($homeScore)
-                    ->setAwayScore($awayScore);
-
-                $newMatches[$fixture['round_id']][] = [$fixture['id']];
-                $this->entityManager->persist($calendar);
             }
         }
         $this->entityManager->flush();
