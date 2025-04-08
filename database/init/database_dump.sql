@@ -1173,7 +1173,7 @@ CREATE TABLE `prediction` (
   KEY `IDX_36396FC82ABEACD6` (`match_id`),
   CONSTRAINT `FK_36396FC82ABEACD6` FOREIGN KEY (`match_id`) REFERENCES `calendar` (`id`),
   CONSTRAINT `FK_36396FC8A76ED395` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=48 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1197,7 +1197,37 @@ INSERT INTO `prediction` VALUES
 (14,3,19136754,2,1,0,'2025-03-27 03:22:37','finished'),
 (15,1,19136747,1,3,0,'2025-03-27 04:01:36','finished'),
 (16,1,19136754,3,2,0,'2025-03-27 04:01:36','finished'),
-(17,1,19136756,3,2,0,'2025-03-31 19:55:11','finished');
+(17,1,19136756,3,2,0,'2025-03-31 19:55:11','finished'),
+(18,1,19136765,1,3,0,'2025-04-08 23:27:41','scheduled'),
+(19,1,19136767,2,4,0,'2025-04-08 22:22:59','scheduled'),
+(20,1,19136768,2,2,0,'2025-04-07 14:40:41','scheduled'),
+(21,1,19136770,1,0,0,'2025-04-07 14:40:41','scheduled'),
+(22,1,19136772,3,2,0,'2025-04-08 22:22:59','scheduled'),
+(23,1,19136764,2,1,0,'2025-04-08 23:25:48','scheduled'),
+(24,1,19136769,2,2,0,'2025-04-08 22:22:59','scheduled'),
+(25,3,19136764,1,3,0,'2025-04-08 22:48:13','scheduled'),
+(26,3,19136765,3,4,0,'2025-04-08 22:48:13','scheduled'),
+(27,3,19136766,0,1,0,'2025-04-08 22:48:13','scheduled'),
+(28,3,19136767,2,1,0,'2025-04-08 22:48:13','scheduled'),
+(29,3,19136768,1,0,0,'2025-04-08 22:48:13','scheduled'),
+(30,3,19136769,2,1,0,'2025-04-08 22:48:13','scheduled'),
+(31,3,19136770,3,0,0,'2025-04-08 22:48:13','scheduled'),
+(32,3,19136771,1,2,0,'2025-04-08 22:48:13','scheduled'),
+(33,2,19136764,1,0,0,'2025-04-08 22:51:59','scheduled'),
+(34,2,19136765,1,0,0,'2025-04-08 22:51:59','scheduled'),
+(35,2,19136766,2,0,0,'2025-04-08 22:51:59','scheduled'),
+(36,2,19136767,3,1,0,'2025-04-08 22:51:59','scheduled'),
+(37,2,19136768,2,1,0,'2025-04-08 22:51:59','scheduled'),
+(38,2,19136769,2,1,0,'2025-04-08 22:51:59','scheduled'),
+(39,2,19136770,3,4,0,'2025-04-08 22:51:59','scheduled'),
+(40,2,19136771,2,1,0,'2025-04-08 22:51:59','scheduled'),
+(41,2,19136772,1,1,0,'2025-04-08 22:51:59','scheduled'),
+(42,4,19136764,2,0,0,'2025-04-08 23:13:25','scheduled'),
+(43,4,19136765,2,1,0,'2025-04-08 23:13:25','scheduled'),
+(44,4,19136766,2,3,0,'2025-04-08 23:13:25','scheduled'),
+(45,4,19136767,1,0,0,'2025-04-08 23:13:25','scheduled'),
+(46,4,19136768,2,1,0,'2025-04-08 23:13:25','scheduled'),
+(47,4,19136771,2,3,0,'2025-04-08 23:13:25','scheduled');
 /*!40000 ALTER TABLE `prediction` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1373,7 +1403,7 @@ CREATE TABLE `user` (
   `scores` int(11) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `UNIQ_8D93D649E7927C74` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1383,9 +1413,10 @@ CREATE TABLE `user` (
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
 INSERT INTO `user` VALUES
-(1,'Nver','nver.am@live.nl','$2y$13$zitxK3H2.LeYywgaT7BweOu7tjewvFfYjbrmWC8IWlk3Iu2U9ejgO','[\"ROLE_USER\"]',NULL,26),
+(1,'Nver','nver.am@live.nl','$2y$13$zitxK3H2.LeYywgaT7BweOu7tjewvFfYjbrmWC8IWlk3Iu2U9ejgO','[\"ROLE_USER\"]','/uploads/avatars/67f3d2c7a90b6.jpg',26),
 (2,'testuser','aa@bb.cc','$2y$13$f.YuQqlsHQkeMnWarcLTjO9zG2smd9J0ZcgYjwT5WHaAWHdljyAqm','[\"ROLE_USER\"]',NULL,0),
-(3,'Alfred','aaaa@kkk','$2y$13$Vj4OxXZwDljGwBb5s8ivmuBWeoE55AXoUCv3MaPv8Svd9CsCgJKom','[\"ROLE_USER\"]',NULL,6);
+(3,'Alfred','aaaa@kkk','$2y$13$Vj4OxXZwDljGwBb5s8ivmuBWeoE55AXoUCv3MaPv8Svd9CsCgJKom','[\"ROLE_USER\"]',NULL,6),
+(4,'Napastak','nap@nap.ss','$2y$13$JlCwGTqVoEUsMzaFgO.ST.6z4WyNHdhPZHeE1UK4vCYi3YcVID2KC','[\"ROLE_USER\"]',NULL,0);
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -1398,4 +1429,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2025-04-06 14:58:28
+-- Dump completed on 2025-04-08 21:30:17
