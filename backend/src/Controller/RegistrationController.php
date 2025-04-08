@@ -22,18 +22,38 @@ class RegistrationController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
-        if (!isset($data['username']) || !isset($data['email']) || !isset($data['password'])) {
-            return new JsonResponse(['message' => 'Username, email, and password are required'], Response::HTTP_BAD_REQUEST);
+        if (!isset($data['username'], $data['email'], $data['password'])) {
+            return new JsonResponse(['message' => 'Username, email en password zijn verplicht.'], Response::HTTP_BAD_REQUEST);
         }
 
-        $existingEmail = $entityManager->getRepository(User::class)->findOneBy(['email' => $data['email']]);
-        $existingUsername = $entityManager->getRepository(User::class)->findOneBy(['username' => $data['username']]);
-
-        if ($existingEmail) {
-            return new JsonResponse(['message' => 'Email is already in use'], Response::HTTP_CONFLICT);
+        if (strlen($data['username']) < 3 || strlen($data['username']) > 20) {
+            return new JsonResponse(['message' => 'Gebruikersnaam moet tussen 3 en 20 tekens zijn.'], Response::HTTP_BAD_REQUEST);
         }
-        if ($existingUsername) {
-            return new JsonResponse(['message' => 'Username is already in use'], Response::HTTP_CONFLICT);
+
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $data['username'])) {
+            return new JsonResponse(['message' => 'Gebruikersnaam mag alleen letters, cijfers en underscores bevatten.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            return new JsonResponse(['message' => 'Ongeldig e-mailadres.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (strlen($data['password']) < 8 ||
+            !preg_match('/[A-Z]/', $data['password']) ||
+            !preg_match('/[a-z]/', $data['password']) ||
+            !preg_match('/[0-9]/', $data['password'])
+        ) {
+            return new JsonResponse([
+                'message' => 'Wachtwoord moet minstens 8 tekens lang zijn, en minstens 1 hoofdletter, 1 kleine letter en 1 cijfer bevatten.'
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        if ($entityManager->getRepository(User::class)->findOneBy(['email' => $data['email']])) {
+            return new JsonResponse(['message' => 'E-mailadres is al in gebruik.'], Response::HTTP_CONFLICT);
+        }
+
+        if ($entityManager->getRepository(User::class)->findOneBy(['username' => $data['username']])) {
+            return new JsonResponse(['message' => 'Gebruikersnaam is al in gebruik.'], Response::HTTP_CONFLICT);
         }
 
         $user = new User();
@@ -47,6 +67,7 @@ class RegistrationController extends AbstractController
         $entityManager->persist($user);
         $entityManager->flush();
 
-        return new JsonResponse(['message' => 'User successfully registered'], Response::HTTP_CREATED);
+        return new JsonResponse(['message' => 'Gebruiker succesvol geregistreerd.'], Response::HTTP_CREATED);
     }
+
 }

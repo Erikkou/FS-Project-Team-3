@@ -84,20 +84,32 @@ class UserController extends AbstractController
     public function updateEmail(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
+
         if (!is_array($data) || empty($data['email'])) {
-            return new JsonResponse(['error' => 'Invalid email provided'], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['error' => 'E-mailadres is verplicht.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $email = $data['email'];
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return new JsonResponse(['error' => 'Ongeldig e-mailadres.'], Response::HTTP_BAD_REQUEST);
         }
 
         $user = $this->getUser();
         if (!$user instanceof User) {
-            return new JsonResponse(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
+            return new JsonResponse(['message' => 'Niet geauthenticeerd.'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $user->setEmail($data['email']);
+        $existing = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
+        if ($existing && $existing->getId() !== $user->getId()) {
+            return new JsonResponse(['error' => 'Dit e-mailadres is al in gebruik.'], Response::HTTP_CONFLICT);
+        }
+
+        $user->setEmail($email);
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
-        return new JsonResponse(['status' => 'Email updated'], Response::HTTP_OK);
+        return new JsonResponse(['status' => 'E-mailadres bijgewerkt.'], Response::HTTP_OK);
     }
 
     #[Route('/api/users/scores', name: 'api_users_scores', methods: ['GET'])]
