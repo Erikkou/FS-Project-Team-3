@@ -48,22 +48,62 @@ class PredictionController extends AbstractController
         }
 
         foreach ($data as $predictionData) {
-            $calendar = $calendarRepository->find($predictionData['calendar_id']);
+            $calendar = $calendarRepository->find($predictionData['calendar_id'] ?? null);
+
             if (!$calendar) {
-                return $this->json(['error' => "Calendar ID {$predictionData['calendar_id']} not found"], 404);
+                return $this->json(['error' => "Wedstrijd (calendar_id {$predictionData['calendar_id']}) niet gevonden."], 404);
             }
+
+            if (!isset($predictionData['home_team_score'], $predictionData['away_team_score']) ||
+                $predictionData['home_team_score'] < 0 || $predictionData['away_team_score'] < 0) {
+                return $this->json(['error' => 'Voorspelling mag geen negatieve score bevatten.'], 400);
+            }
+
             $status = $calendar->getStatus();
 
-            // Check if the prediction already exists for the user
+            if ($status === 'finished') {
+                return $this->json(['error' => 'Deze wedstrijd is al gespeeld. Voorspellen is niet meer mogelijk.'], 400);
+            }
+
+            $now = new \DateTimeImmutable();
+            if ($now >= $calendar->getStartingAt()) {
+                return $this->json(['error' => 'De wedstrijd is al begonnen of vandaag gepland. Voorspellen is niet meer mogelijk.'], 400);
+            }
+
             $existingPrediction = $predictionRepository->findOneBy([
                 'user' => $user,
                 'match' => $calendar
             ]);
 
+            // Beveiliging tegen manipulatie met andere match_id
+            // Zoek alle voorspellingen van deze user
+            $userPredictions = $predictionRepository->findBy(['user' => $user]);
+
+            foreach ($userPredictions as $userPrediction) {
+                if (
+                    $userPrediction->getId() !== ($existingPrediction?->getId()) &&
+                    $userPrediction->getMatch()->getId() === $calendar->getId()
+                ) {
+                    return $this->json([
+                        'error' => 'Je hebt al een voorspelling voor deze wedstrijd. Bewerken is toegestaan, maar niet opnieuw insturen.'
+                    ], 400);
+                }
+
+                if (
+                    $existingPrediction &&
+                    $existingPrediction->getMatch()->getId() !== $calendar->getId()
+                ) {
+                    return $this->json([
+                        'error' => 'Je kunt de wedstrijd van een bestaande voorspelling niet aanpassen.'
+                    ], 400);
+                }
+            }
+
             if ($existingPrediction) {
                 $existingPrediction->setHomeTeamScore($predictionData['home_team_score']);
                 $existingPrediction->setAwayTeamScore($predictionData['away_team_score']);
                 $existingPrediction->setStatus($status);
+                $existingPrediction->setCreatedAt(new \DateTimeImmutable());
                 $em->persist($existingPrediction);
             } else {
                 $prediction = new Prediction();
@@ -73,14 +113,13 @@ class PredictionController extends AbstractController
                 $prediction->setAwayTeamScore($predictionData['away_team_score']);
                 $prediction->setCreatedAt(new \DateTimeImmutable());
                 $prediction->setStatus($status);
-
                 $em->persist($prediction);
             }
         }
 
         $em->flush();
 
-        return $this->json(['message' => 'All predictions saved', 'match_status' => $status], 201);
+        return $this->json(['message' => 'Voorspellingen succesvol opgeslagen'], 201);
     }
 
     #[Route('/api/user/predictions', methods: ['GET'])]
@@ -100,7 +139,7 @@ class PredictionController extends AbstractController
                     'home_team' => $prediction->getMatch()->getHomeTeam()->getName(),
                     'away_team' => $prediction->getMatch()->getAwayTeam()->getName(),
                     'home_score' => $prediction->getMatch()->getHomeScore(),
-                    'away_score' =>$prediction->getMatch()->getAwayScore(),
+                    'away_score' => $prediction->getMatch()->getAwayScore(),
                     'status' => $prediction->getMatch()->getStatus(),
                 ],
                 'home_team_score' => $prediction->getHomeTeamScore(),
